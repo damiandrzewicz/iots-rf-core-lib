@@ -1,7 +1,12 @@
 #include <Arduino.h>
 
+#include "NodeCore.hpp"
+
 void setup() {
   // put your setup code here, to run once:
+
+  NodeCore nc;
+  nc.test();
 }
 
 void loop() {
