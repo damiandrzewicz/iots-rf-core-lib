@@ -1,37 +1,41 @@
 # Hello VuePress
 
-## Some Header
+## EEPROM Configuration
 
-Some example text
-
-## Another header
-
-test
-
-### subheader
-
-test 123
-
-### subheader 2
-
-test 345
+Node has possibility to save configuration in `EEPROM` memory. Interface class, which can be implemented for different kinds of configurations is following:
 
 @startuml
-strict digraph meme {
-  exists [color=blue]
-  authenticate [color=blue]
-  require
-  create
-  UserCreated
-  destroy
-  UserDestroyed
-  get [color=blue]
-  authenticate -> require
-  create -> UserCreated
-  destroy -> require
-  destroy -> UserDestroyed
-  get -> require
+interface EEPROMConfig{
+  {abstract} void save()
+  {abstract} void read()
+  {abstract} void clear()
 }
+
+class Data{
+  {abstract} bool isEmpty()
+  {abstract} bool setEmpty()
+}
+
+Data -left-* EEPROMConfig
 @enduml
 
-## Last test header
+Every single method is abstract and body should be implemented in derived class. Class `EEPROMConfig` contains `Data` class with is treated as a model and should be extended in derived class too.
+
+### RadioConfig EEPROM implementation
+
+@startuml
+interface EEPROMConfig
+class RadioConfig{
+  void save()
+  void read()
+  void clear()
+}
+
+class Data{
+
+}
+
+EEPROMConfig <|-- RadioConfig
+@enduml
+
+
