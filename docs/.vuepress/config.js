@@ -24,5 +24,12 @@ module.exports = {
     sidebar: [
       '/'
     ]
-  }
+  },
+  markdown: {
+		lineNumbers: true,
+		extendMarkdown: md => {
+		  md.set({ html: true })
+		  md.use(require('markdown-it-plantuml'))
+		}
+	}
 }
