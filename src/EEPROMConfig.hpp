@@ -1,24 +1,41 @@
 #pragma once
 
 #include <Arduino.h>
+#include <EEPROM.h>
 
+template<class T>
 class EEPROMConfig
 {
 public:
-    struct Data{
-        virtual bool isEmpty() = 0;
-        virtual void setEmpty() = 0;
-
-        int emptyVal_ = 0xff;
-    };
-
     EEPROMConfig(int address) : address_(address){}
     virtual ~EEPROMConfig() = default;
 
-    virtual void save() = 0;
-    virtual void read() = 0;
-    virtual void clear() = 0; 
+    void save(){
+        EEPROM.put(address_, data_);
+    }
+
+    void read(){
+        EEPROM.get(address_, data_);
+    }
+
+    void clear(){
+        setEmpty();
+    }
+
+    virtual bool isEmpty() = 0;
+    virtual void setEmpty() = 0;
+    virtual void setDefaults() = 0;
+
+    T &data(){
+        return data_;
+    }
+
+    size_t dataSize(){
+        return sizeof(T);
+    }
 
 protected:
     int address_;
+    T data_;
+    uint8_t emptyVal_ = 0xff;
 };

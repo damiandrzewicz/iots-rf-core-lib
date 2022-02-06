@@ -1,0 +1,11 @@
+{ 
+    "name": "MockEEPROM",
+    "version": "0.1.0",
+    "keyords": ["eeprom", "mock"],
+    "description": "Mock EEPROM library for unittests on the native platform",
+    "authors": {
+        "name": "Dolf Andringa",
+        "email": "dolfandringa@gmail.com"
+    },
+    "platforms": "native"
+}
