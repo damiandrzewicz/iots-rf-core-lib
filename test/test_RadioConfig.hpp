@@ -80,6 +80,14 @@ void test_RadioConfig_clear()
     TEST_ASSERT_TRUE(rc.isEmpty());
 }
 
+void test_RadioConfig_dataSize()
+{
+    RadioConfig rc(0);
+    char buff[50];
+    sprintf(buff, "RadioConfig size=[%zu]", rc.dataSize());
+    TEST_MESSAGE(buff);
+}
+
 void test_request(void)
 {
     // When(Method(ArduinoFake(Client), stop)).AlwaysReturn();
@@ -108,5 +116,5 @@ void run_tests_RadioConfig() {
     RUN_TEST(test_RadioConfig_saveDefaults);
     RUN_TEST(test_RadioConfig_saveCustom);
     RUN_TEST(test_RadioConfig_clear);
-
+    RUN_TEST(test_RadioConfig_dataSize);
 }

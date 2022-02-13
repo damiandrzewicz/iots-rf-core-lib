@@ -2,16 +2,18 @@
 #include <unity.h>
 #include "UUIDConfig.hpp"
 
+const int address = 100;
+
 void test_UUIDConfig_readUndefined()
 {
-    UUIDConfig rc(0);
+    UUIDConfig rc(address);
     rc.read();
     TEST_ASSERT_TRUE(rc.isEmpty());
 }
 
 void test_UUIDConfig_setDefaults()
 {
-    UUIDConfig rc(0);
+    UUIDConfig rc(address);
     rc.setDefaults();
     auto &data = rc.data();
 
@@ -23,7 +25,7 @@ void test_UUIDConfig_setDefaults()
 
 void test_UUIDConfig_saveDefaults()
 {
-    UUIDConfig rc(0);
+    UUIDConfig rc(address);
     rc.setDefaults();
     rc.save();
     rc.read();
@@ -40,7 +42,7 @@ void test_UUIDConfig_saveDefaults()
 
 void test_UUIDConfig_saveCustom()
 {
-    UUIDConfig rc(0);
+    UUIDConfig rc(address);
     auto &data = rc.data();
 
     const char *uuid = "A1B2C3D4E5F6AABB";
@@ -59,7 +61,7 @@ void test_UUIDConfig_saveCustom()
 
 void test_UUIDConfig_clear()
 {
-    UUIDConfig rc(0);
+    UUIDConfig rc(address);
     rc.setDefaults();
     rc.save();
     rc.read();
