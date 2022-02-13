@@ -1,9 +1,9 @@
 #include <unity.h>
-
 #include "RadioConfig.hpp"
 
 void setUp(void)
 {
+#ifndef ARDUINO
     ArduinoFakeReset();
 
     // Set EEPROM Mock allocation
@@ -14,11 +14,14 @@ void setUp(void)
     {
         EEPROM.write(i, 0xff);
     }
+#endif
 }
 
 void tearDown(void) {
+#ifndef ARDUINO
     // Clear EEPROM Mock allocation
     EEPROM.end();
+#endif
 }
 
 void test_RadioConfig_readUndefined()
@@ -145,9 +148,9 @@ void setup() {
 }
 
 void loop() {
-    digitalWrite(13, HIGH);
+    digitalWrite(9, HIGH);
     delay(100);
-    digitalWrite(13, LOW);
+    digitalWrite(9, LOW);
     delay(500);
 }
 
