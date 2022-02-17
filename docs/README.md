@@ -57,21 +57,36 @@ board_bootloader.efuse = 0xFE
 board_bootloader.file = bootloaders/optiboot_7370000hz_115200b_atmega328.hex
 ```
 
-## EEPROM Configuration
+## Configuration
+
+Configuration is an interface class of following pure virtual operations:
+
+@startuml
+interface Config {
+  +{abstract} ~Config()
+
+  +{abstract} void save()
+  +{abstract} void read()
+  +{abstract} void clear()
+
+  +{abstract} bool isEmpty()
+  +{abstract} void setEmpty()
+  +{abstract} void setDefaults()
+}
+@enduml
+
+### EEPROM Configuration
 
 Every node can save its data to `EEPROM` memory. It is necessary due to keep data when power is down and for "cacheing" objects. "Cacheing" means when data are saved in unvolatile 'EEPROM' memory it's not necessary to ask Gateway for data. They can be read from "memory". Base abstract class is `EEPROMConfig` which is a template class.
 
 @startuml
 class EEPROMConfig<T> {
   +EEPROMConfig(int address)
+  +{abstract} ~EEPROMConfig()
 
-  +void save()
-  +void read()
-  +void clear()
-
-  +{abstract} bool isEmpty()
-  +{abstract} void setEmpty()
-  +{abstract} void setDefaults()
+  +void save() override
+  +void read() override
+  +void clear() override
 
   +T &data()
   +size_t dataSize()
@@ -79,6 +94,9 @@ class EEPROMConfig<T> {
   -T data_
   -int address_;
 }
+
+interface Config{}
+class EEPROMConfig<T> implements Config
 @enduml
 
 Template has 3 methods for saving, reading and clearing data directly in `EEPROM` memory. It contains three additional ethods for checking if structure of type `T` is empty, setting it empty and setting defaults. Constructor argument is starting memory address of initialized structure.
@@ -92,19 +110,44 @@ Structure cannot has `virtual` methods, because this kind of objects cannot be r
 :::
 
 
-### RadioConfig EEPROM implementation
+#### RadioConfig EEPROM implementation
 
 @startuml
-
 class EEPROMConfig<RadioConfigData>
 
 class RadioConfig{
-  bool isEmpty()
-  void setEmpty()
-  void setDefaults()
+  bool isEmpty() override
+  void setEmpty() override
+  void setDefaults() override
+}
+
+class RadioConfigData{
+    +networkId: uint8_t
+    +gatewayId: uint8_t
+    +customFrequency: unsigned long
+    +encryptKey[17]: char
+    +powerLevel: int8_t
 }
 
 EEPROMConfig <|-- RadioConfig
+EEPROMConfig *-- RadioConfigData
 @enduml
 
+#### UUIDConfig EEPROM implementation
 
+@startuml
+class EEPROMConfig<UUIDConfigData>
+
+class UUIDConfig{
+  bool isEmpty() override
+  void setEmpty() override
+  void setDefaults() override
+}
+
+class UUIDConfigData{
+  +uuid[16]: byte
+}
+
+EEPROMConfig <|-- UUIDConfig
+EEPROMConfig *-- UUIDConfigData
+@enduml

@@ -1,24 +1,25 @@
 #pragma once
 
 #include <Arduino.h>
+#include "Config.hpp"
 #include <EEPROM.h>
 
 template<class T>
-class EEPROMConfig
+class EEPROMConfig : public Config
 {
 public:
     EEPROMConfig(int address) : address_(address){}
     virtual ~EEPROMConfig() = default;
 
-    void save(){
+    virtual void save() override {
         EEPROM.put(address_, data_);
     }
 
-    void read(){
+    virtual void read() override {
         EEPROM.get(address_, data_);
     }
 
-    void clear(){
+    virtual void clear() override {
         setEmpty();
     }
 
