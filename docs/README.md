@@ -151,3 +151,15 @@ class UUIDConfigData{
 EEPROMConfig <|-- UUIDConfig
 EEPROMConfig *-- UUIDConfigData
 @enduml
+
+## Node Modes
+
+### State Mode
+
+After start node can be in following modes:
+- unpaired - node has no connection with gateway. 
+- pairing - node is switched to the pairing mode by pressing button. Both `node` and `gateway` must be switched to this mode to allow pairing. Both radio configurations must be the same to allow data exchange. There are two scenarios:
+  - for gateway - if gateway is entered into pairing mode then process lasts 30 seconds. Every 1 second radio is configured to pairing state and it lasts `500 ms`. When time elapsed then radio configuration is switched back to work mode to receive usual node data.
+- work - node is connected to the gateway and received `internal node id`. If `UUID` is missing then 
+
+### Work Mode
