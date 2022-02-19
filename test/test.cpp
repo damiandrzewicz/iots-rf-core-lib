@@ -1,7 +1,7 @@
 #include <unity.h>
 #include "test_RadioConfig.hpp"
 #include "test_UUIDConfig.hpp"
-//#include "test_NodeCore.hpp"
+#include "test_MessageBuffer.hpp"
 
 void setUp(void)
 {
@@ -31,7 +31,7 @@ void process() {
 
     run_tests_RadioConfig();
     run_tests_UUIDConfig();
-    //run_tests_NodeCore();
+    run_tests_MessageBuffer();
 
     UNITY_END();
 }
