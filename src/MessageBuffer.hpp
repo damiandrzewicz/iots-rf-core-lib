@@ -8,7 +8,13 @@ class MessageBuffer
 public:
     MessageBuffer()
     {
-        buffer_.fill('\0');
+        clear();
+    }
+
+    MessageBuffer(const char *str)
+    {
+        clear();
+        strncpy(buffer_.data(), str, buffer_.size());
     }
 
     void appendText(const char *data)
@@ -33,9 +39,21 @@ public:
         strcat(buffer_.data(), "|");
     }
 
-    std::array<char, 100> *buffer()
+    void clear()
+    {
+        buffer_.fill('\0');
+    }
+
+    const std::array<char, 100> *buffer() const
     {
         return &buffer_;
+    }
+
+    MessageBuffer &operator=(const char *str)
+    {
+        clear();
+        strncpy(buffer_.data(), str, buffer_.size());
+        return *this;
     }
 
 private:

@@ -12,7 +12,7 @@ void NodeCore::setup()
 
     // Initialize logger
     Log.begin(LOG_LEVEL_VERBOSE, &Serial);
-    Log.noticeln(F("NodeCore::setup"));
+    Log.noticeln(F("NodeCore::setup IN"));
 
     // Setup pins
     pinMode(s_radioPairPin_, INPUT_PULLUP);
@@ -21,22 +21,31 @@ void NodeCore::setup()
     setupLedTimer();
     readConfiguration();
 
-    // Wait until node configured
+    radioConfig_.clear();
+    radioConfig_.save();
 
-    // while(!isRadioConfigured())
-    // {
-    //     if(isRadioPairing())
-    //     {
-    //         radioPairWorker();
-    //     }
-    // }
+    Log.noticeln(F("check radio config..."));
+
+    // Wait until node configured
+    while(!isRadioConfigured())
+    {
+        if(isRadioPairing())
+        {
+            radioPairWorker();
+            radioConfig_.setDefaults();
+        }
+    }
+
+    Log.noticeln(F("radio configured!"));
 
     // If configuration available then configure radio
-    // setupRadio(radioConfig_.data());
+    radioSetup(radioConfig_.data());
     // while(!registerNode())
     // {
     //     // Try to register
     // }    
+
+    Log.noticeln(F("NodeCore::setup OUT"));
 }
 
 void NodeCore::loop()
@@ -45,7 +54,7 @@ void NodeCore::loop()
     if(isRadioPairing())
     {
         radioPairWorker();
-        setupRadio(radioConfig_.data());
+        radioSetup(radioConfig_.data());
     }
 
     // Work mode
@@ -53,7 +62,7 @@ void NodeCore::loop()
 
 void NodeCore::readConfiguration()
 {
-    Log.noticeln(F("NodeCore::readConfiguration"));
+    Log.verboseln(F("NodeCore::readConfiguration"));
 
     // Read Radio EEPROM config
     radioConfig_.read();
@@ -100,7 +109,7 @@ bool NodeCore::isRadioPairing()
 
 bool NodeCore::radioPairWorker()
 {
-    Log.noticeln(F("NodeCore::radioPairWorker IN"));
+    Log.verboseln(F("NodeCore::radioPairWorker IN"));
 
     // Setup radio
     // ...
@@ -111,13 +120,19 @@ bool NodeCore::radioPairWorker()
     strcpy_P(rcf.encryptKey, PSTR("sampleEncryptKey"));
     rcf.powerLevel = 0;
 
-    setupRadio(rcf);
+    radioSetup(rcf);
 
     setLedMode(LedMode::Pair);
 
     for(uint8_t i = 0; i < 8; ++i)
     {
         Log.noticeln(F("Pair attempt: %d"), i);
+
+        // Build radio pair message
+
+        // Send message and get response
+
+        // Parse response and decide about result
 
         delay(1000);
     }
@@ -129,20 +144,75 @@ bool NodeCore::radioPairWorker()
     return false;
 }
 
-void NodeCore::setupRadio(const RadioConfigData &data)
+void NodeCore::radioSetup(const RadioConfigData &data)
 {
-    Log.noticeln(F("NodeCore::setupRadio"));
+    Log.verboseln(F("NodeCore::setupRadio"));
+}
+
+bool NodeCore::radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack)
+{
+    Log.verboseln(F("NodeCore::sendToRadio: ack=%d"), ack);
+
+    const auto &radioConf = radioConfig_.data();
+
+    if(ack)
+    {
+        auto ret = radio_.sendWithRetry(radioConf.gatewayId, request->buffer()->data(), request->buffer()->size());
+        if(ret)
+        {
+            Log.noticeln(F("radio sent!"));
+            if(radioPayloadToBuffer())
+            {
+                response = &messageBuffer_;
+                return true;
+            }
+        }
+        return false;
+    }
+    else
+    {
+        radio_.send(radioConf.gatewayId, request->buffer()->data(), request->buffer()->size());
+        return true;
+    }
+}
+
+void NodeCore::radioReceiveWorker()
+{
+    Log.verboseln(F("NodeCore::radioReceiveWorker"));
+    if(radio_.receiveDone())
+    {
+        const char *data = reinterpret_cast<const char*>(radio_.DATA);
+        radioPayloadToBuffer();
+    }
+}
+
+bool NodeCore::radioPayloadToBuffer()
+{
+    Log.verboseln(F("NodeCore::checkRadioPayload"));
+
+    const char *data = reinterpret_cast<const char*>(radio_.DATA);
+    if (radio_.DATALEN) 
+    {
+        if(radio_.DATALEN == strlen(data))  // got a valid packet?
+        {
+            messageBuffer_ = data;
+            Log.noticeln(F("<--received: %s"), data);
+            return true;
+        }
+        return false;
+    }
+    return false;
 }
 
 bool NodeCore::registerNode()
 {
-    Log.noticeln(F("NodeCore::registerNode"));
+    Log.verboseln(F("NodeCore::registerNode"));
     return false;
 }
 
 void NodeCore::deepSleepDelay(unsigned int delay_ms)
 {
-    Log.noticeln(F("NodeCore::deepSleepDelay for %d ms"), delay_ms);
+    Log.verboseln(F("NodeCore::deepSleepDelay for %d ms"), delay_ms);
     Serial.flush();
     //radio_.sleep();
     LowPowerWrp.DeepSleep(delay_ms);
@@ -155,7 +225,7 @@ void wakeUp()
 
 void NodeCore::deepSleepForewerAndWakeInt(uint8_t pin, uint8_t mode)
 {
-    Log.noticeln(F("NodeCore::deepSleepForewerAndWakeInt, pin: %d, mode: %d"), pin, mode);
+    Log.verboseln(F("NodeCore::deepSleepForewerAndWakeInt, pin: %d, mode: %d"), pin, mode);
     Serial.flush();
     radio_.sleep();
     attachInterrupt(digitalPinToInterrupt(pin), wakeUp, mode);
@@ -167,6 +237,8 @@ void NodeCore::deepSleepForewerAndWakeInt(uint8_t pin, uint8_t mode)
 // Led timer
 void NodeCore::setLedMode(NodeCore::LedMode mode)
 {
+    Log.verboseln(F("NodeCore::setLedMode"));
+
     enableLedTimer();
 
     if(mode == LedMode::Pair)
@@ -195,6 +267,8 @@ void NodeCore::setLedMode(NodeCore::LedMode mode)
 
 void NodeCore::setupLedTimer()
 {
+    Log.verboseln(F("NodeCore::setupLedTimer"));
+
     cli();//stop interrupts
     TCCR1A = 0;// set entire TCCR1A register to 0
     TCCR1B = 0;// same for TCCR1B
@@ -207,11 +281,13 @@ void NodeCore::setupLedTimer()
 
 void NodeCore::enableLedTimer()
 {
+    Log.verboseln(F("NodeCore::enableLedTimer"));
     TIMSK1 |= (1 << OCIE1A);
 }
 
 void NodeCore::disableLedTimer()
 {
+    Log.verboseln(F("NodeCore::disableLedTimer"));
     TIMSK1 &= ~(1 << OCIE1A);
 }
 

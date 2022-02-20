@@ -6,6 +6,7 @@
 #include "RFM69_ATC.h"
 #include "RadioConfig.hpp"
 #include "UUIDConfig.hpp"
+#include "MessageBuffer.hpp"
 
 #define FLASH_SS 8
 
@@ -35,7 +36,10 @@ protected:
     bool isRadioConfigured();
     bool isRadioPairing();
     bool radioPairWorker();
-    void setupRadio(const RadioConfigData &data);
+    void radioSetup(const RadioConfigData &data);
+    bool radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack = true);
+    void radioReceiveWorker();
+    bool radioPayloadToBuffer();
 
     // Node operations
     bool registerNode();
@@ -59,6 +63,8 @@ private:
     RFM69_ATC radio_;
     RadioConfig radioConfig_;
     UUIDConfig uuidConfig_;
+
+    MessageBuffer messageBuffer_;
 
     static const uint8_t s_radioPairPin_ = 4;
     static const uint8_t s_ledPin = 9;
