@@ -1,5 +1,7 @@
 #pragma once
 
+#if defined(__AVR__)
+
 #include <Arduino.h>
 #include "Appliance.hpp"
 #include "UUIDConfig.hpp"
@@ -12,7 +14,7 @@ class Node : public Appliance
 {
 public:
     Node()
-        :   
+        :   Appliance(4),
             uuidConfig_(radioConfig_.dataSize() + 1)
     {}
 
@@ -27,7 +29,6 @@ protected:
     virtual void readConfiguration();
 
     // Radio operations
-    virtual bool isRadioPairTriggered() override;
 
     // void readConfiguration();
 
@@ -42,5 +43,6 @@ protected:
 private:
     UUIDConfig uuidConfig_;
     static StatusLed statusLed;
-    static const uint8_t s_radioPairPin_ = 4;
 };
+
+#endif

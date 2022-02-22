@@ -13,6 +13,9 @@ public:
 
     virtual void save() override {
         EEPROM.put(address_, data_);
+#ifdef ESP32
+        EEPROM.commit();
+#endif
     }
 
     virtual void read() override {

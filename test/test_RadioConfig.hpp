@@ -1,5 +1,5 @@
 #pragma once
-#include <unity.h>
+#include "unity.h"
 #include "RadioConfig.hpp"
 
 void test_RadioConfig_readUndefined()
@@ -85,7 +85,6 @@ void test_RadioConfig_dataSize()
     RadioConfig rc(0);
     char buff[50];
     sprintf(buff, "RadioConfig size=[%zu]", rc.dataSize());
-    TEST_MESSAGE(buff);
 }
 
 void test_request(void)
@@ -116,5 +115,5 @@ void run_tests_RadioConfig() {
     RUN_TEST(test_RadioConfig_saveDefaults);
     RUN_TEST(test_RadioConfig_saveCustom);
     RUN_TEST(test_RadioConfig_clear);
-    RUN_TEST(test_RadioConfig_dataSize);
+    //RUN_TEST(test_RadioConfig_dataSize);
 }

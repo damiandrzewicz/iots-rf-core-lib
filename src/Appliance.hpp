@@ -9,7 +9,7 @@
 class Appliance
 {
 public:
-    Appliance();
+    Appliance(uint8_t radioPairPin);
     ~Appliance() = default;
 
     virtual void setup() = 0;
@@ -25,12 +25,14 @@ protected:
     bool radioPayloadToBuffer();
     void radioReceiveTask();
     bool radioPairRoutine();
-    virtual bool isRadioPairTriggered() = 0;
+    bool isRadioPairBtnTriggered();
     RadioConfigData getRadioConfigForPair();
 
+#if defined(__AVR__)
     // Power saving operations
     void deepSleepDelay(unsigned int delay);
     void deepSleepForewerAndWakeInt(uint8_t pin, uint8_t mode);
+#endif
 
     // Notifications
     virtual void statusLedBlink(int16_t speed) = 0;
@@ -43,4 +45,5 @@ protected:
     RadioConfig radioConfig_;
 
     MessageBuffer messageBuffer_;
+    const uint8_t RadioPairPin_;
 };

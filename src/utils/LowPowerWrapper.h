@@ -1,13 +1,16 @@
 #pragma once 
 
-#include <LowPower.h>
-#include <Arduino.h>
+#if defined(__AVR__)
 
-class LowPowerWrapper
-{
-public:
-    void DeepSleep(uint32_t sleepTime);
-    void DeepSleepForever();
-};
+    #include <LowPower.h>
+    #include <Arduino.h>
 
-extern LowPowerWrapper LowPowerWrp;
+    class LowPowerWrapper
+    {
+    public:
+        void DeepSleep(uint32_t sleepTime);
+        void DeepSleepForever();
+    };
+
+    extern LowPowerWrapper LowPowerWrp;
+#endif

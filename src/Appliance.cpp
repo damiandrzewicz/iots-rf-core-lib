@@ -1,9 +1,12 @@
 #include "Appliance.hpp"
 #include <ArduinoLog.h>
-#include "utils/LowPowerWrapper.h"
 
-Appliance::Appliance()
-    : radioConfig_(0)
+#if defined(__AVR__)
+    #include "utils/LowPowerWrapper.h"
+#endif
+
+Appliance::Appliance(uint8_t radioPairPin)
+    : radioConfig_(0), RadioPairPin_(radioPairPin)
 {
     Log.verboseln(F("Appliance::Appliance"));
 }
@@ -22,7 +25,7 @@ void Appliance::radioSetup(const RadioConfigData &data)
     Log.verboseln(F("Appliance::setupRadio"));
 }
 
-bool Appliance::radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack = true)
+bool Appliance::radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack)
 {
     Log.verboseln(F("Appliance::radioSend"));
 
@@ -94,6 +97,35 @@ bool Appliance::radioPairRoutine()
     return pairResult;
 }
 
+bool Appliance::isRadioPairBtnTriggered()
+{
+    static int lastFlickerableState = HIGH;  // the previous flickerable state from the input pin
+    static unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
+    static const int DEBOUNCE_DELAY = 3000;
+    int currentState = digitalRead(RadioPairPin_);               // the current reading from the input pin
+
+    // If the switch/button changed, due to noise or pressing:
+    if (currentState != lastFlickerableState) {
+        // reset the debouncing timer
+        lastDebounceTime = millis();
+        // save the the last flickerable state
+        lastFlickerableState = currentState;
+    }
+
+    if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
+        // whatever the reading is at, it's been there for longer than the debounce
+        // delay, so take it as the actual current state:
+
+        // if the button state has changed:
+        if (currentState == LOW)
+        {
+            lastFlickerableState = HIGH;
+            return true;
+        }
+    }
+    return false;
+}
+
 void Appliance::radioReceiveTask()
 {
     if(radio_.receiveDone())
@@ -118,6 +150,8 @@ RadioConfigData Appliance::getRadioConfigForPair()
     return radioConfigData;
 }
 
+#if defined(__AVR__)
+
 void Appliance::deepSleepDelay(unsigned int delay_ms)
 {
     Log.verboseln(F("Appliance::deepSleepDelay for %d ms"), delay_ms);
@@ -141,6 +175,8 @@ void Appliance::deepSleepForewerAndWakeInt(uint8_t pin, uint8_t mode)
     LowPowerWrp.DeepSleepForever();
     detachInterrupt(0); 
 }
+
+#endif
 
 void Appliance::notifyPairStarted()
 {

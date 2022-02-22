@@ -1,4 +1,4 @@
-#include <unity.h>
+#include "unity.h"
 #include "test_RadioConfig.hpp"
 #include "test_UUIDConfig.hpp"
 #include "test_MessageBuffer.hpp"
@@ -17,11 +17,19 @@ void setUp(void)
         EEPROM.write(i, 0xff);
     }
 #endif
+
+#ifdef ESP32
+    EEPROM.begin(512);
+#endif
 }
 
 void tearDown(void) {
 #ifndef ARDUINO
     // Clear EEPROM Mock allocation
+    EEPROM.end();
+#endif
+
+#ifdef ESP32
     EEPROM.end();
 #endif
 }

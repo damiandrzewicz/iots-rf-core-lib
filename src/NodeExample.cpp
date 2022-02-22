@@ -1,19 +1,23 @@
-#include <Arduino.h>
-#include <ArduinoLog.h>
-#include "Node.hpp"
+#if defined(__AVR__)
 
-Node node;
+  #include <Arduino.h>
+  #include <ArduinoLog.h>
+  #include "Node.hpp"
 
-void setup() {
-  // Initialize UART interface
-  Serial.begin(115200);
+  Node node;
 
-  // Initialize logger
-  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+  void setup() {
+    // Initialize UART interface
+    Serial.begin(115200);
 
-  node.setup();
-}
+    // Initialize logger
+    Log.begin(LOG_LEVEL_VERBOSE, &Serial);
 
-void loop() {
-  node.loop();
-}
+    node.setup();
+  }
+
+  void loop() {
+    node.loop();
+  }
+
+#endif
