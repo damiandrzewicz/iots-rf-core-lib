@@ -1,14 +1,7 @@
 #pragma once
 
+#include "RadioConfigData.hpp"
 #include "EEPROMConfig.hpp"
-
-struct RadioConfigData{
-    uint8_t networkId;
-    uint8_t gatewayId;
-    unsigned long customFrequency;
-    char encryptKey[17];
-    int8_t powerLevel;
-};
 
 class RadioConfig : public EEPROMConfig<RadioConfigData>
 {

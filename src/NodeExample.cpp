@@ -1,13 +1,19 @@
 #include <Arduino.h>
+#include <ArduinoLog.h>
+#include "Node.hpp"
 
-#include "NodeCore.hpp"
-
-NodeCore nc;
+Node node;
 
 void setup() {
-  nc.setup();
+  // Initialize UART interface
+  Serial.begin(115200);
+
+  // Initialize logger
+  Log.begin(LOG_LEVEL_VERBOSE, &Serial);
+
+  node.setup();
 }
 
 void loop() {
-  nc.loop();
+  node.loop();
 }
