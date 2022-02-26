@@ -5,200 +5,85 @@
     #include "utils/LowPowerWrapper.h"
 #endif
 
-Appliance::Appliance(uint8_t radioPairPin)
-    : radioConfig_(0), RadioPairPin_(radioPairPin)
+Appliance::Appliance(uint8_t radioPairBtn, uint8_t statusLed, int8_t extInterrupt)
+    : radioPairBtn_(radioPairBtn), statusLed_(statusLed), extInterrupt_(extInterrupt), radioConfig_(0)
 {
     Log.verboseln(F("Appliance::Appliance"));
 }
 
-void Appliance::readConfiguration()
+void Appliance::setup()
 {
-    // Read all configuration from EEPROM or somewhere else
-    Log.verboseln(F("Appliance::readConfiguration"));
+    init();
+    setupStateMachine();
 
-    // Read Radio EEPROM config
-    radioConfig_.read();
+    Log.noticeln(F("Active state: %s"), stateMachine_.ActiveStateName());
 }
 
-void Appliance::radioSetup(const RadioConfigData &data)
+void Appliance::loop()
 {
-    Log.verboseln(F("Appliance::setupRadio"));
-}
-
-bool Appliance::radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack)
-{
-    Log.verboseln(F("Appliance::radioSend"));
-
-    const auto &radioConf = radioConfig_.data();
-
-    if(ack)
-    {
-        auto ret = radio_.sendWithRetry(radioConf.gatewayId, request->buffer()->data(), request->buffer()->size());
-        if(ret)
-        {
-            Log.noticeln(F("radio sent!"));
-            if(radioPayloadToBuffer())
-            {
-                response = &messageBuffer_;
-                return true;
-            }
-        }
-        return false;
-    }
-    else
-    {
-        radio_.send(radioConf.gatewayId, request->buffer()->data(), request->buffer()->size());
-        return true;
+    if(stateMachine_.Update()){
+        Log.noticeln(F("Active state: %s"), stateMachine_.ActiveStateName());
     }
 }
 
-bool Appliance::radioPayloadToBuffer()
+void Appliance::setupStateMachine()
 {
-    Log.verboseln(F("Appliance::radioPayloadToBuffer"));
-    const char *data = reinterpret_cast<const char*>(radio_.DATA);
-    if (radio_.DATALEN) 
-    {
-        if(radio_.DATALEN == strlen(data))  // got a valid packet?
-        {
-            messageBuffer_ = data;
-            Log.noticeln(F("<--received: %s"), data);
-            return true;
-        }
-        return false;
-    }
-    return false;
-}
-
-bool Appliance::radioPairRoutine()
-{
-    Log.verboseln(F("Appliance::radioPairRoutine IN"));
-
-    radioSetup(getRadioConfigForPair());
-    
-    notifyPairStarted();
-
-    bool pairResult = false;
-    for(uint8_t i = 0; i < 8; ++i)
-    {
-        Log.noticeln(F("Pair attempt: %d"), i);
-
-        // Build radio pair message
-
-        // Send message and get response
-
-        // Parse response and decide about result
-
-        delay(1000);
-    }
-    
-    // Led notifications
-    pairResult ? notifyPairSuccess() : notifyPairFailed();
-
-    return pairResult;
-}
-
-bool Appliance::isRadioPairBtnTriggered()
-{
-    static int lastFlickerableState = HIGH;  // the previous flickerable state from the input pin
-    static unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-    static const int DEBOUNCE_DELAY = 3000;
-    int currentState = digitalRead(RadioPairPin_);               // the current reading from the input pin
-
-    // If the switch/button changed, due to noise or pressing:
-    if (currentState != lastFlickerableState) {
-        // reset the debouncing timer
-        lastDebounceTime = millis();
-        // save the the last flickerable state
-        lastFlickerableState = currentState;
-    }
-
-    if ((millis() - lastDebounceTime) > DEBOUNCE_DELAY) {
-        // whatever the reading is at, it's been there for longer than the debounce
-        // delay, so take it as the actual current state:
-
-        // if the button state has changed:
-        if (currentState == LOW)
-        {
-            lastFlickerableState = HIGH;
-            return true;
-        }
-    }
-    return false;
-}
-
-void Appliance::radioReceiveTask()
-{
-    if(radio_.receiveDone())
-    {
-        radioPayloadToBuffer();
-
-        // Here process some incoming messages - TOTO in future
-    }
-}
-
-RadioConfigData Appliance::getRadioConfigForPair()
-{
-    Log.verboseln(F("Appliance::getRadioConfigForPair"));
-
-    RadioConfigData radioConfigData;
-    radioConfigData.gatewayId = 1;
-    radioConfigData.networkId = 111;
-    radioConfigData.customFrequency = 869000000;
-    strcpy_P(radioConfigData.encryptKey, PSTR("sampleEncryptKey"));
-    radioConfigData.powerLevel = 0;
-
-    return radioConfigData;
+    Log.verboseln(F("Appliance::setupStateMachine"));
 }
 
 #if defined(__AVR__)
 
-void Appliance::deepSleepDelay(unsigned int delay_ms)
+
+void Appliance::deepSleepFor(unsigned int delay_ms)
 {
-    Log.verboseln(F("Appliance::deepSleepDelay for %d ms"), delay_ms);
+    Log.verboseln(F("Appliance::deepSleepFor for %d ms"), delay_ms);
+
+    preDeepSleep();
+    LowPowerWrp.DeepSleep(delay_ms);
+    postDeepSleep();
+}
+
+void Appliance::deepSleepForWakeupOnInt(unsigned int delay_ms, uint8_t pin, uint8_t mode)
+{
+    Log.verboseln(F("Appliance::deepSleepForWakeupOnInt for: %d, interrput(pin: %d, mode: %d)"), pin, mode);
+    
+    preDeepSleep();
+    attachInterrupt(digitalPinToInterrupt(pin), [](){}, mode);
+    
+    if(delay_ms)
+    {
+        LowPowerWrp.DeepSleep(delay_ms);
+    }
+    else
+    {
+        LowPowerWrp.DeepSleepForever();
+    }
+
+    detachInterrupt(0); 
+    postDeepSleep();
+}
+
+void Appliance::preDeepSleep()
+{
+    Log.verboseln(F("Appliance::preDeepSleep"));
+
     Serial.flush();
     //radio_.sleep();
-    LowPowerWrp.DeepSleep(delay_ms);
 }
 
-void wakeUp()
+void Appliance::postDeepSleep()
 {
-    //DeviceCore::IsExtInterrupt = true;
+    Log.verboseln(F("Appliance::postDeepSleep"));
+}   
+
+void Appliance::onEnterActiveStateName()
+{
+    Log.verboseln(F("onEnter: %s"), stateMachine_.ActiveStateName());
 }
 
-void Appliance::deepSleepForewerAndWakeInt(uint8_t pin, uint8_t mode)
+void Appliance::onLeaveActiveStateName()
 {
-    Log.verboseln(F("Appliance::deepSleepForewerAndWakeInt, pin: %d, mode: %d"), pin, mode);
-    Serial.flush();
-    radio_.sleep();
-    attachInterrupt(digitalPinToInterrupt(pin), wakeUp, mode);
-    //IsExtInterrupt = false;    // Clear interrupt flag
-    LowPowerWrp.DeepSleepForever();
-    detachInterrupt(0); 
+    Log.verboseln(F("onLeave: %s"), stateMachine_.ActiveStateName());
 }
 
 #endif
-
-void Appliance::notifyPairStarted()
-{
-    Log.verboseln(F("Appliance::notifyPairStarted"));
-
-    statusLedBlink(10);
-}
-
-void Appliance::notifyPairSuccess()
-{
-    Log.verboseln(F("Appliance::notifyPairSuccess"));
-
-    statusLedBlink(0);
-    delay(3000);
-    statusLedBlink(-1);
-}
-
-void Appliance::notifyPairFailed()
-{
-    Log.verboseln(F("Appliance::notifyPairFailed"));
-
-    statusLedBlink(30);
-    delay(3000);
-    statusLedBlink(-1);
-}

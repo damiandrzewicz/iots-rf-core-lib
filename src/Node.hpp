@@ -5,44 +5,40 @@
 #include <Arduino.h>
 #include "Appliance.hpp"
 #include "UUIDConfig.hpp"
-#include "StatusLed.hpp"
-
-
-#define FLASH_SS 8
 
 class Node : public Appliance
 {
 public:
-    Node()
-        :   Appliance(4),
-            uuidConfig_(radioConfig_.dataSize() + 1)
-    {}
-
-    virtual void setup() override;
-    virtual void loop() override;
+    Node() : Appliance(4,9), uuidConfig_(radioConfig_.dataSize() + 1){}
 
 protected:
 
-    friend void timer1Handler();
+    enum class State
+    {
+        VerifyConfig,
+        Pairing,
+        RadioListen,
+        SendState,
+        Sleep
+    };
 
-    // Configuration
-    virtual void readConfiguration();
+    void setupStateMachine() override;
+    void init() override;
 
-    // Radio operations
+    // States
+    void onPairing();
+    void onRadioListen();
+    void onSendState();
+    void onSleep();
 
-    // void readConfiguration();
+    // Inputs
+    bool checkButton();
 
-    // // Radio operations
-    // bool isRadioConfigured();
-    // bool isRadioPairing(); 
+    // Helpers
+    bool statusLedBlink(int delay, int execFor = 0);
 
-
-    // Status Led
-    virtual void statusLedBlink(int16_t speed) override;
-
-private:
+protected:
     UUIDConfig uuidConfig_;
-    static StatusLed statusLed;
 };
 
 #endif

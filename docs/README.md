@@ -156,10 +156,40 @@ EEPROMConfig *-- UUIDConfigData
 
 ### State Mode
 
-After start node can be in following modes:
-- unpaired - node has no connection with gateway. 
-- pairing - node is switched to the pairing mode by pressing button. Both `node` and `gateway` must be switched to this mode to allow pairing. Both radio configurations must be the same to allow data exchange. There are two scenarios:
-  - for gateway - if gateway is entered into pairing mode then process lasts 30 seconds. Every 1 second radio is configured to pairing state and it lasts `500 ms`. When time elapsed then radio configuration is switched back to work mode to receive usual node data.
-- work - node is connected to the gateway and received `internal node id`. If `UUID` is missing then 
+@startuml
+scale 600 width
+
+[*] -> State1
+State1 --> [*] : Aborted
+State2 --> State3 : Succeeded
+State2 --> [*] : Aborted
+state State3 {
+  state "Accumulate Enough Data\nLong State Name" as long1
+  long1 : Just a test
+  [*] --> long1
+  long1 --> long1 : New Data
+  long1 --> ProcessData : Enough Data
+}
+State3 --> State3 : Failed
+State3 --> [*] : Succeeded / Save Result
+State3 --> [*] : Aborted
+@enduml
+
+@startuml
+scale 600 width
+
+[*] -> VerifyConfig
+VerifyConfig --> Pairing : button pressed for 5s &&\neeprom empty
+VerifyConfig --> SendState : eeprom filled
+Pairing --> SendState : success
+Pairing --> VerifyConfig : failed
+SendState --> RadioListen : success
+SendState --> Sleep : failed
+state RadioListen : for 100ms
+RadioListen --> Sleep
+state Sleep : (sleep for <nodeSleepTime> || sleep forever) \n&& wake up on interrupt
+Sleep --> SendState : success
+Sleep --> Pairing : button pressed for 5s
+@enduml
 
 ### Work Mode

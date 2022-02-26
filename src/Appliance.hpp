@@ -3,47 +3,45 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "RFM69_ATC.h"
+#include "YA_FSM.h"
+//#include <arduino-timer.h>
+
 #include "RadioConfig.hpp"
-#include "MessageBuffer.hpp"
+//#include "MessageBuffer.hpp"
 
 class Appliance
 {
 public:
-    Appliance(uint8_t radioPairPin);
+    Appliance(uint8_t radioPairBtn, uint8_t statusLed, int8_t extInterrupt = -1);
     ~Appliance() = default;
 
-    virtual void setup() = 0;
-    virtual void loop() = 0;
+    virtual void setup();
+    virtual void loop();
 
 protected:
-    // Configuration
-    virtual void readConfiguration();
 
-    // Radio operations
-    void radioSetup(const RadioConfigData &data);
-    bool radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack = true);
-    bool radioPayloadToBuffer();
-    void radioReceiveTask();
-    bool radioPairRoutine();
-    bool isRadioPairBtnTriggered();
-    RadioConfigData getRadioConfigForPair();
+    virtual void setupStateMachine() = 0;
+    virtual void init() = 0;
 
 #if defined(__AVR__)
     // Power saving operations
-    void deepSleepDelay(unsigned int delay);
-    void deepSleepForewerAndWakeInt(uint8_t pin, uint8_t mode);
+    void deepSleepFor(unsigned int delay);
+    void deepSleepForWakeupOnInt(unsigned int delay_ms, uint8_t pin, uint8_t mode);
+    virtual void preDeepSleep();
+    virtual void postDeepSleep();
 #endif
 
-    // Notifications
-    virtual void statusLedBlink(int16_t speed) = 0;
-    virtual void notifyPairStarted();
-    virtual void notifyPairSuccess();
-    virtual void notifyPairFailed();
+    void onEnterActiveStateName();
+    void onLeaveActiveStateName();
 
 protected:
+    YA_FSM stateMachine_;
+
+    uint8_t radioPairBtn_;
+    uint8_t statusLed_;
+    int8_t extInterrupt_;
+
     RFM69_ATC radio_;
     RadioConfig radioConfig_;
 
-    MessageBuffer messageBuffer_;
-    const uint8_t RadioPairPin_;
 };
