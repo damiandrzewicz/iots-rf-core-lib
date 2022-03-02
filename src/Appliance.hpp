@@ -4,15 +4,17 @@
 #include <SPI.h>
 #include "RFM69_ATC.h"
 #include "YA_FSM.h"
+#include <ezButton.h>
+#include <ezLED.h>
 //#include <arduino-timer.h>
 
 #include "RadioConfig.hpp"
-//#include "MessageBuffer.hpp"
+#include "MessageBuffer.hpp"
 
 class Appliance
 {
 public:
-    Appliance(uint8_t radioPairBtn, uint8_t statusLed, int8_t extInterrupt = -1);
+    Appliance(uint8_t stateBtnPin, uint8_t stateLedPin, int8_t extInterruptPin = -1);
     ~Appliance() = default;
 
     virtual void setup();
@@ -22,6 +24,9 @@ protected:
 
     virtual void setupStateMachine() = 0;
     virtual void init() = 0;
+
+    virtual void stateLedLoop();
+    virtual void stateBtnLoop();
 
 #if defined(__AVR__)
     // Power saving operations
@@ -33,15 +38,25 @@ protected:
 
     void onEnterActiveStateName();
     void onLeaveActiveStateName();
+    void onFactoryReset();
+
+    // Radio operations
+    bool radioSetup(uint8_t nodeId, const RadioConfigData &data);
+    bool radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack = true);
+    bool radioPayloadToBuffer();
+    void sendACKRepsonse(const MessageBuffer *request = nullptr);
+    RadioConfigData getRadioConfigForPairing();
 
 protected:
     YA_FSM stateMachine_;
 
-    uint8_t radioPairBtn_;
-    uint8_t statusLed_;
-    int8_t extInterrupt_;
+    ezButton stateBtn_;
+    ezLED stateLed_;
+    int8_t extInterruptPin_;
 
     RFM69_ATC radio_;
     RadioConfig radioConfig_;
+
+    MessageBuffer messageBuffer_;
 
 };

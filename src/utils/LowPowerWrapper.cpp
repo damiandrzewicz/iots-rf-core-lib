@@ -1,4 +1,5 @@
 #include "LowPowerWrapper.h"
+#include "wiring_private.h"
 
 #if defined(__AVR__)
 

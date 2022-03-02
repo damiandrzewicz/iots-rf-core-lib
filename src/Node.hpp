@@ -9,36 +9,67 @@
 class Node : public Appliance
 {
 public:
-    Node() : Appliance(4,9), uuidConfig_(radioConfig_.dataSize() + 1){}
+    Node() : Appliance(4, 9, 3), uuidConfig_(radioConfig_.dataSize() + 1){}
 
 protected:
 
     enum class State
     {
         VerifyConfig,
+        SleepUntilExtInt,
+        StateBtnHandle,
+        RadioPairing,
+        RadioReset,
+        FactoryReset
+    };
+
+    enum class StateBtnMode
+    {
+        NoMode,
         Pairing,
-        RadioListen,
-        SendState,
-        Sleep
+        RadioReset,
+        FactoryReset
     };
 
     void setupStateMachine() override;
     void init() override;
+    
+    virtual void stateBtnLoop() override;
 
-    // States
-    void onPairing();
-    void onRadioListen();
-    void onSendState();
-    void onSleep();
+    /**
+     * States
+     * 
+     */
+
+    // VerifyConfig,
+    void onVerifyConfig();
+
+    // SleepUntilExtInt,
+    void onSleepUntilExtInt();
+
+    // StateBtnHandle,
+    void onEnterStateBtnHandle();
+    void onStateBtnHandle();
+    void onLeaveStateBtnHandle();
+
+    // RadioPairing
+    void onRadioPairing();
+
+    // RadioReset,
+    void onRadioReset();
+
+    // FactoryReset
+    void onFactoryReset();
+
 
     // Inputs
-    bool checkButton();
+    StateBtnMode checkStateBtn();
 
     // Helpers
-    bool statusLedBlink(int delay, int execFor = 0);
 
 protected:
     UUIDConfig uuidConfig_;
+    StateBtnMode stateBtnMode_ = StateBtnMode::NoMode;
 };
 
 #endif

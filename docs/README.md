@@ -157,39 +157,53 @@ EEPROMConfig *-- UUIDConfigData
 ### State Mode
 
 @startuml
-scale 600 width
-
-[*] -> State1
-State1 --> [*] : Aborted
-State2 --> State3 : Succeeded
-State2 --> [*] : Aborted
-state State3 {
-  state "Accumulate Enough Data\nLong State Name" as long1
-  long1 : Just a test
-  [*] --> long1
-  long1 --> long1 : New Data
-  long1 --> ProcessData : Enough Data
-}
-State3 --> State3 : Failed
-State3 --> [*] : Succeeded / Save Result
-State3 --> [*] : Aborted
+[*] -> Awoken
+VerifyConfig : before - read config
+VerifyConfig --> SleepUntilExtInt : failed\n&&\nstateBtn released
+VerifyConfig --> Awoken : success\n&&\nstateBtn pressed
+SendRadio --> ListenRadio : success
+SendRadio --> SleepForOrUntilExtInt : failed
+SendRadio --> SendRadio : repeat few times
+ListenRadio : for 50 ms
+ListenRadio --> SleepForOrUntilExtInt : failed
+ListenRadio --> MessageHandle : success
+MessageHandle --> SleepForOrUntilExtInt : success/failed
+SleepForOrUntilExtInt : choose sleep option for node
+SleepForOrUntilExtInt --> Awoken : success
+Awoken --> VerifyConfig : stateBtn released
+MessageBuild --> SendRadio : success
+Awoken --> Pairing : btn pressed for 1s
+Awoken --> FactoryReset : btn pressed for 15s
+Awoken --> VerifyConfig
+VerifyConfig --> MessageBuild : success
+FactoryReset --> VerifyConfig : success
+Awoken --> RadioReset : btn pressed for 10s
+RadioReset -> VerifyConfig : success
+Pairing : enter: start blink\non:pair
+Pairing --> VerifyConfig : success
+Pairing --> SleepUntilExtInt : failed
+SleepUntilExtInt --> Awoken : stateBtn pressed
+SleepUntilExtInt --> SleepUntilExtInt : stateBtn released\nfake wakeup
 @enduml
 
 @startuml
-scale 600 width
+[*] --> VerifyConfig
+VerifyConfig --> MessageBuild : success
+VerifyConfig --> SleepUntilExtInt : failed
+SleepUntilExtInt --> StateBtnHandle : success
+StateBtnHandle --> VerifyConfig : stateBtn HIGH\n&&\ndebounce timeout
+StateBtnHandle --> RadioPairing : stateBtn min. 3s\n&&\ndebounce timeout
+RadioPairing --> VerifyConfig : success
+RadioPairing --> SleepUntilExtInt : failed
+StateBtnHandle --> RadioReset : stateBtn min. 10s\n&&\ndebounce timeout
+RadioReset --> VerifyConfig : success
+RadioReset --> SleepUntilExtInt : failed
+StateBtnHandle --> FactoryReset : stateBtn min. 15s\n&&\ndebounce timeout
+FactoryReset --> VerifyConfig : success
+FactoryReset --> SleepUntilExtInt : failed
 
-[*] -> VerifyConfig
-VerifyConfig --> Pairing : button pressed for 5s &&\neeprom empty
-VerifyConfig --> SendState : eeprom filled
-Pairing --> SendState : success
-Pairing --> VerifyConfig : failed
-SendState --> RadioListen : success
-SendState --> Sleep : failed
-state RadioListen : for 100ms
-RadioListen --> Sleep
-state Sleep : (sleep for <nodeSleepTime> || sleep forever) \n&& wake up on interrupt
-Sleep --> SendState : success
-Sleep --> Pairing : button pressed for 5s
 @enduml
+
+
 
 ### Work Mode
