@@ -187,20 +187,42 @@ SleepUntilExtInt --> SleepUntilExtInt : stateBtn released\nfake wakeup
 @enduml
 
 @startuml
-[*] --> VerifyConfig
-VerifyConfig --> MessageBuild : success
-VerifyConfig --> SleepUntilExtInt : failed
-SleepUntilExtInt --> StateBtnHandle : success
-StateBtnHandle --> VerifyConfig : stateBtn HIGH\n&&\ndebounce timeout
-StateBtnHandle --> RadioPairing : stateBtn min. 3s\n&&\ndebounce timeout
-RadioPairing --> VerifyConfig : success
-RadioPairing --> SleepUntilExtInt : failed
-StateBtnHandle --> RadioReset : stateBtn min. 10s\n&&\ndebounce timeout
-RadioReset --> VerifyConfig : success
-RadioReset --> SleepUntilExtInt : failed
-StateBtnHandle --> FactoryReset : stateBtn min. 15s\n&&\ndebounce timeout
-FactoryReset --> VerifyConfig : success
-FactoryReset --> SleepUntilExtInt : failed
+
+
+state Configuring {
+  [*] --> VerifyConfig
+  VerifyConfig --> SleepUntilExtInt : failed
+
+  RadioPairing --> VerifyConfig : success
+  RadioPairing --> SleepUntilExtInt : failed
+  
+  RadioReset --> VerifyConfig : success
+  RadioReset --> SleepUntilExtInt : failed
+  
+  FactoryReset --> VerifyConfig : success
+  FactoryReset --> SleepUntilExtInt : failed
+  
+}
+
+SleepUntilExtInt --> CheckStateBtn : success
+CheckStateBtn --> VerifyConfig : stateBtn HIGH\n&&\ndebounce timeout
+CheckStateBtn --> RadioPairing : stateBtn min. 3s\n&&\ndebounce timeout
+CheckStateBtn --> FactoryReset : stateBtn min. 15s\n&&\ndebounce timeout
+CheckStateBtn --> RadioReset : stateBtn min. 10s\n&&\ndebounce timeout
+
+state Messaging {
+  VerifyConfig --> MessageBuild : success
+  MessageBuild --> SendToRadio : success
+  MessageBuild --> SleepForOrUntilExtInt : failed
+  SendToRadio --> ListenFromRadio : success
+  ListenFromRadio : for 50 ms
+  SendToRadio --> SleepForOrUntilExtInt : failed
+  ListenFromRadio --> MessageHandle : success
+  ListenFromRadio --> SleepForOrUntilExtInt : failed
+  MessageHandle --> SleepForOrUntilExtInt : success/failed
+  SleepForOrUntilExtInt --> CheckStateBtn : success
+}
+
 
 @enduml
 

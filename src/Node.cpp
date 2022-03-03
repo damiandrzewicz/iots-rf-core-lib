@@ -7,10 +7,15 @@
 const char* const stateName[] PROGMEM = { 
         "VerifyConfig",
         "SleepUntilExtInt",
-        "StateBtnHandle",
+        "CheckStateBtn",
         "RadioPairing",
         "RadioReset",
-        "FactoryReset"
+        "FactoryReset",
+        "MessageBuild",
+        "MessageHandle",
+        "SendToRadio",
+        "ListenFromRadio",
+        "SleepForOrUntilExtInt"
 };
 
 void Node::setupStateMachine()
@@ -33,10 +38,10 @@ void Node::setupStateMachine()
         this
     );
 
-    stateMachine_.AddState(stateName[static_cast<int>(State::StateBtnHandle)], 0,
-        [](void *ctx){ static_cast<Node*>(ctx)->onEnterStateBtnHandle(); }, 
-        [](void *ctx){ static_cast<Node*>(ctx)->onStateBtnHandle(); }, 
-        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveStateBtnHandle(); }, 
+    stateMachine_.AddState(stateName[static_cast<int>(State::CheckStateBtn)], 0,
+        [](void *ctx){ static_cast<Node*>(ctx)->onEnterCheckStateBtn(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onCheckStateBtn(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onCheckStateBtn(); }, 
         this
     );
 
@@ -61,6 +66,41 @@ void Node::setupStateMachine()
         this
     );
 
+    stateMachine_.AddState(stateName[static_cast<int>(State::MessageBuild)], 0,
+        [](void *ctx){ static_cast<Node*>(ctx)->onEnterActiveStateName(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onMessageBuild(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveActiveStateName(); }, 
+        this
+    );
+
+    stateMachine_.AddState(stateName[static_cast<int>(State::MessageHandle)], 0,
+        [](void *ctx){ static_cast<Node*>(ctx)->onEnterActiveStateName(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onMessageBuild(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveActiveStateName(); }, 
+        this
+    );
+
+    stateMachine_.AddState(stateName[static_cast<int>(State::SendToRadio)], 0,
+        [](void *ctx){ static_cast<Node*>(ctx)->onEnterActiveStateName(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onSendToRadio(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveActiveStateName(); }, 
+        this
+    );
+
+    stateMachine_.AddState(stateName[static_cast<int>(State::ListenFromRadio)], 0,
+        [](void *ctx){ static_cast<Node*>(ctx)->onEnterActiveStateName(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onListenFromRadio(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveActiveStateName(); }, 
+        this
+    );
+
+    stateMachine_.AddState(stateName[static_cast<int>(State::SleepForOrUntilExtInt)], 0,
+        [](void *ctx){ static_cast<Node*>(ctx)->onEnterActiveStateName(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onSleepForOrUntilExtInt(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveActiveStateName(); }, 
+        this
+    );
+
 
 
     /** Transitions */
@@ -73,7 +113,7 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::SleepUntilExtInt), static_cast<int>(State::StateBtnHandle), 
+    stateMachine_.AddTransition(static_cast<int>(State::SleepUntilExtInt), static_cast<int>(State::CheckStateBtn), 
         [](void *ctx){
             return
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
@@ -81,7 +121,7 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::StateBtnHandle), static_cast<int>(State::RadioPairing), 
+    stateMachine_.AddTransition(static_cast<int>(State::CheckStateBtn), static_cast<int>(State::RadioPairing), 
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->timeout &&
@@ -90,7 +130,7 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::StateBtnHandle), static_cast<int>(State::RadioReset), 
+    stateMachine_.AddTransition(static_cast<int>(State::CheckStateBtn), static_cast<int>(State::RadioReset), 
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->timeout &&
@@ -99,7 +139,7 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::StateBtnHandle), static_cast<int>(State::FactoryReset), 
+    stateMachine_.AddTransition(static_cast<int>(State::CheckStateBtn), static_cast<int>(State::FactoryReset), 
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->timeout &&
@@ -108,7 +148,7 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::StateBtnHandle), static_cast<int>(State::VerifyConfig), 
+    stateMachine_.AddTransition(static_cast<int>(State::CheckStateBtn), static_cast<int>(State::VerifyConfig), 
         [](void *ctx){
             return static_cast<Node*>(ctx)->stateMachine_.CurrentState()->timeout &&
                  static_cast<Node*>(ctx)->stateBtn_.getState() == HIGH;
@@ -117,6 +157,14 @@ void Node::setupStateMachine()
     );
 
     stateMachine_.AddTransition(static_cast<int>(State::RadioPairing), static_cast<int>(State::SleepUntilExtInt), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Failed;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::RadioPairing), static_cast<int>(State::VerifyConfig), 
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
@@ -136,6 +184,79 @@ void Node::setupStateMachine()
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->timeout;   
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::VerifyConfig), static_cast<int>(State::MessageBuild), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::MessageBuild), static_cast<int>(State::SendToRadio), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::MessageBuild), static_cast<int>(State::SleepForOrUntilExtInt), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Failed;      
+        },
+        this    
+    );
+
+
+    stateMachine_.AddTransition(static_cast<int>(State::SendToRadio), static_cast<int>(State::ListenFromRadio), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::SendToRadio), static_cast<int>(State::SleepForOrUntilExtInt), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Failed;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::ListenFromRadio), static_cast<int>(State::MessageHandle), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::MessageHandle), static_cast<int>(State::SleepForOrUntilExtInt), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::ListenFromRadio), static_cast<int>(State::SleepForOrUntilExtInt), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Failed;      
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::SleepForOrUntilExtInt), static_cast<int>(State::CheckStateBtn), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->Result == FSM_State::Result::Success;      
         },
         this    
     );
@@ -184,6 +305,8 @@ void Node::onVerifyConfig()
 
         // setupRadio
     }
+
+    stateMachine_.CurrentState()->Result = FSM_State::Result::Success;
 }
 
 // SleepUntilExtInt,
@@ -195,19 +318,19 @@ void Node::onSleepUntilExtInt()
 }
 
 // StateBtnHandle,
-void Node::onEnterStateBtnHandle()
+void Node::onEnterCheckStateBtn()
 {
     onEnterActiveStateName();
     stateMachine_.CurrentState()->maxTime = stateBtn_.getDebounceTime() + 5;
     stateLed_.blink(50, 950, 1000);
 }
 
-void Node::onStateBtnHandle()
+void Node::onCheckStateBtn()
 {
 
 }
 
-void Node::onLeaveStateBtnHandle()
+void Node::onLeaveCheckStateBtn()
 {
     onLeaveActiveStateName();
     stateLed_.cancel();
@@ -261,6 +384,37 @@ void Node::onRadioReset()
 void Node::onFactoryReset()
 {
 
+}
+
+// MessageBuild,
+void Node::onSendToRadio()
+{
+    stateMachine_.CurrentState()->Result = FSM_State::Result::Success;
+}
+
+// SendToRadio,
+void Node::onMessageBuild()
+{
+    stateMachine_.CurrentState()->Result = FSM_State::Result::Success;
+}
+
+// MessageHandle
+void Node::onMessageHandle()
+{
+    stateMachine_.CurrentState()->Result = FSM_State::Result::Success;
+}
+
+// ListenFromRadio,
+void Node::onListenFromRadio()
+{
+    stateMachine_.CurrentState()->Result = FSM_State::Result::Success;
+}
+
+// SleepForOrUntilExtInt
+void Node::onSleepForOrUntilExtInt()
+{
+    stateMachine_.CurrentState()->Result = FSM_State::Result::Success;
+   deepSleepForWakeupOnInt(5000, extInterruptPin_, FALLING);
 }
 
 // void Node::onPairing()
