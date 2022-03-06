@@ -16,16 +16,13 @@ protected:
     enum class State
     {
         VerifyConfig,
-        SleepUntilExtInt,
-        CheckStateBtn,
+        RadioSend,
+        RadioListen,
+        SleepForOrUntilExtInt,
+        ActionHandler,
         RadioPairing,
-        RadioReset,
         FactoryReset,
-        MessageBuild,
-        MessageHandle,
-        SendToRadio,
-        ListenFromRadio,
-        SleepForOrUntilExtInt
+        RadioReset
     };
 
     enum class StateBtnMode
@@ -49,38 +46,28 @@ protected:
     // VerifyConfig,
     void onVerifyConfig();
 
-    // SleepUntilExtInt,
-    void onSleepUntilExtInt();
+    // RadioSend,
+    void onRadioSend();
 
-    // CheckStateBtn,
-    void onEnterCheckStateBtn();
-    void onCheckStateBtn();
-    void onLeaveCheckStateBtn();
-
-    // RadioPairing
-    void onRadioPairing();
-
-    // RadioReset,
-    void onRadioReset();
-
-    // FactoryReset
-    void onFactoryReset();
-
-    // MessageBuild,
-    void onMessageBuild();
-
-    // MessageHandle
-    void onMessageHandle();
-
-    // SendToRadio,
-    void onSendToRadio();
-
-    // ListenFromRadio,
-    void onListenFromRadio();
+    // RadioListen,
+    void onRadioListen();
 
     // SleepForOrUntilExtInt
     void onSleepForOrUntilExtInt();
 
+    // ActionHandler,
+    void onEnterActionHandler();
+    void onActionHandler();
+    void onLeaveActionHandler();
+
+    // RadioPairing,
+    void onRadioPairing();
+
+    // FactoryReset,
+    //void onFactoryReset();
+
+    // RadioReset,
+    void onRadioReset();
 
     // Inputs
     StateBtnMode checkStateBtn();

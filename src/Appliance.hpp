@@ -31,7 +31,7 @@ protected:
 #if defined(__AVR__)
     // Power saving operations
     void deepSleepFor(unsigned int delay);
-    void deepSleepForWakeupOnInt(unsigned int delay_ms, uint8_t pin, uint8_t mode);
+    void deepSleepForWakeupOnInt(unsigned int delay, uint8_t pin, uint8_t mode);
     virtual void preDeepSleep();
     virtual void postDeepSleep();
 #endif
@@ -53,6 +53,7 @@ protected:
     ezButton stateBtn_;
     ezLED stateLed_;
     int8_t extInterruptPin_;
+    unsigned long nextSleepTime_ = 0;
 
     RFM69_ATC radio_;
     RadioConfig radioConfig_;

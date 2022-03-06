@@ -70,16 +70,16 @@ void Appliance::deepSleepFor(unsigned int delay_ms)
     postDeepSleep();
 }
 
-void Appliance::deepSleepForWakeupOnInt(unsigned int delay_ms, uint8_t pin, uint8_t mode)
+void Appliance::deepSleepForWakeupOnInt(unsigned int delay, uint8_t pin, uint8_t mode)
 {
-    Log.verboseln(F("Appliance::deepSleepForWakeupOnInt for: %d, interrput(pin: %d, mode: %d)"), delay_ms, pin, mode);
+    Log.verboseln(F("Appliance::deepSleepForWakeupOnInt for: %d, interrput(pin: %d, mode: %d)"), delay, pin, mode);
     
     preDeepSleep();
     attachInterrupt(digitalPinToInterrupt(pin), [](){}, mode);
     
-    if(delay_ms)
+    if(delay)
     {
-        LowPowerWrp.DeepSleep(delay_ms);
+        LowPowerWrp.DeepSleep(delay);
     }
     else
     {
@@ -110,14 +110,19 @@ void Appliance::onEnterActiveStateName()
 
 void Appliance::onLeaveActiveStateName()
 {
-    Log.verboseln(F("onLeave: %s"), stateMachine_.ActiveStateName());
+    Log.verboseln(F("onLeave: %s (ret: %s, timeout: %d)"), 
+        stateMachine_.ActiveStateName(), 
+        stateMachine_.CurrentState()->result == FSM_State::Result::Success ? "success" 
+            : stateMachine_.CurrentState()->result == FSM_State::Result::Failed ? "failed" : "inWork",
+        stateMachine_.CurrentState()->timeout
+    );
 }
 
 void Appliance::onFactoryReset()
 {
     Log.verboseln(F("Appliance::onFactoryReset"));
 
-    stateMachine_.CurrentState()->Result = FSM_State::Result::Success;
+    stateMachine_.CurrentState()->result = FSM_State::Result::Success;
 }
 
 // Radio operations

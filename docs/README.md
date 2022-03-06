@@ -157,75 +157,35 @@ EEPROMConfig *-- UUIDConfigData
 ### State Mode
 
 @startuml
-[*] -> Awoken
-VerifyConfig : before - read config
-VerifyConfig --> SleepUntilExtInt : failed\n&&\nstateBtn released
-VerifyConfig --> Awoken : success\n&&\nstateBtn pressed
-SendRadio --> ListenRadio : success
-SendRadio --> SleepForOrUntilExtInt : failed
-SendRadio --> SendRadio : repeat few times
-ListenRadio : for 50 ms
-ListenRadio --> SleepForOrUntilExtInt : failed
-ListenRadio --> MessageHandle : success
-MessageHandle --> SleepForOrUntilExtInt : success/failed
-SleepForOrUntilExtInt : choose sleep option for node
-SleepForOrUntilExtInt --> Awoken : success
-Awoken --> VerifyConfig : stateBtn released
-MessageBuild --> SendRadio : success
-Awoken --> Pairing : btn pressed for 1s
-Awoken --> FactoryReset : btn pressed for 15s
-Awoken --> VerifyConfig
-VerifyConfig --> MessageBuild : success
-FactoryReset --> VerifyConfig : success
-Awoken --> RadioReset : btn pressed for 10s
-RadioReset -> VerifyConfig : success
-Pairing : enter: start blink\non:pair
-Pairing --> VerifyConfig : success
-Pairing --> SleepUntilExtInt : failed
-SleepUntilExtInt --> Awoken : stateBtn pressed
-SleepUntilExtInt --> SleepUntilExtInt : stateBtn released\nfake wakeup
-@enduml
+[*] --> VerifyConfig
+VerifyConfig --> SleepForOrUntilExtInt : failed\n(nextSleepTime = 0)
+VerifyConfig --> RadioSend : success
 
-@startuml
+ActionHandler --> FactoryReset : factoryReset
+ActionHandler --> RadioReset : radioReset
+ActionHandler --> RadioPairing : radioPairing
 
+note left of ActionHandler : state btn\ndebounce delay
 
-state Configuring {
-  [*] --> VerifyConfig
-  VerifyConfig --> SleepUntilExtInt : failed
+SleepForOrUntilExtInt --> ActionHandler : success/failed
 
-  RadioPairing --> VerifyConfig : success
-  RadioPairing --> SleepUntilExtInt : failed
-  
-  RadioReset --> VerifyConfig : success
-  RadioReset --> SleepUntilExtInt : failed
-  
-  FactoryReset --> VerifyConfig : success
-  FactoryReset --> SleepUntilExtInt : failed
-  
-}
+state join_sleep <<join>>
 
-SleepUntilExtInt --> CheckStateBtn : success
-CheckStateBtn --> VerifyConfig : stateBtn HIGH\n&&\ndebounce timeout
-CheckStateBtn --> RadioPairing : stateBtn min. 3s\n&&\ndebounce timeout
-CheckStateBtn --> FactoryReset : stateBtn min. 15s\n&&\ndebounce timeout
-CheckStateBtn --> RadioReset : stateBtn min. 10s\n&&\ndebounce timeout
+RadioSend --> RadioListen : success
+RadioSend --> join_sleep : failed
+RadioListen --> join_sleep : success/failed
 
-state Messaging {
-  VerifyConfig --> MessageBuild : success
-  MessageBuild --> SendToRadio : success
-  MessageBuild --> SleepForOrUntilExtInt : failed
-  SendToRadio --> ListenFromRadio : success
-  ListenFromRadio : for 50 ms
-  SendToRadio --> SleepForOrUntilExtInt : failed
-  ListenFromRadio --> MessageHandle : success
-  ListenFromRadio --> SleepForOrUntilExtInt : failed
-  MessageHandle --> SleepForOrUntilExtInt : success/failed
-  SleepForOrUntilExtInt --> CheckStateBtn : success
-}
+join_sleep --> SleepForOrUntilExtInt : nextSleepTime = <deviceValue>
 
+state join_action <<join>>
+FactoryReset --> join_action
+RadioReset --> join_action
+RadioPairing --> join_action
+join_action --> VerifyConfig : success/failed
+
+ActionHandler --> RadioSend : success &&\nno flag
 
 @enduml
-
 
 
 ### Work Mode
