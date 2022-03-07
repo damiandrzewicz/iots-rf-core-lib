@@ -9,7 +9,7 @@
 class Node : public Appliance
 {
 public:
-    Node() : Appliance(4, 9, 3), uuidConfig_(radioConfig_.dataSize() + 1){}
+    Node() : Appliance(4, 9, 3){}
 
 protected:
 
@@ -25,18 +25,8 @@ protected:
         RadioReset
     };
 
-    enum class StateBtnMode
-    {
-        NoMode,
-        Pairing,
-        RadioReset,
-        FactoryReset
-    };
-
     void setupStateMachine() override;
     void init() override;
-    
-    virtual void stateBtnLoop() override;
 
     /**
      * States
@@ -61,7 +51,9 @@ protected:
     void onLeaveActionHandler();
 
     // RadioPairing,
+    void onEnterRadioPairing();
     void onRadioPairing();
+    void onLeaveRadioPairing();
 
     // FactoryReset,
     //void onFactoryReset();
@@ -69,14 +61,13 @@ protected:
     // RadioReset,
     void onRadioReset();
 
-    // Inputs
-    StateBtnMode checkStateBtn();
+
 
     // Helpers
 
 protected:
-    UUIDConfig uuidConfig_;
-    StateBtnMode stateBtnMode_ = StateBtnMode::NoMode;
+    //UUIDConfig uuidConfig_;
+    
 };
 
 #endif

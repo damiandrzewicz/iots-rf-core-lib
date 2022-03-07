@@ -57,9 +57,9 @@ void Node::setupStateMachine()
     );
 
     stateMachine_.AddState(stateName[static_cast<int>(State::RadioPairing)], 5000,
-        [](void *ctx){ static_cast<Node*>(ctx)->onEnterActiveStateName(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onEnterRadioPairing(); }, 
         [](void *ctx){ static_cast<Node*>(ctx)->onRadioPairing(); }, 
-        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveActiveStateName(); }, 
+        [](void *ctx){ static_cast<Node*>(ctx)->onLeaveRadioPairing(); }, 
         this
     );
 
@@ -154,12 +154,11 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::ActionHandler), static_cast<int>(State::RadioSend), 
+    stateMachine_.AddTransition(static_cast<int>(State::ActionHandler), static_cast<int>(State::VerifyConfig), 
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->timeout &&
                 static_cast<Node*>(ctx)->stateBtn_.getState() == HIGH;
-  
         },
         this    
     );
@@ -167,9 +166,23 @@ void Node::setupStateMachine()
     stateMachine_.AddTransition(static_cast<int>(State::RadioPairing), static_cast<int>(State::VerifyConfig), 
         [](void *ctx){
             return 
-                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->timeout &&
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->result != FSM_State::Result::InWork;
-  
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::RadioPairing), static_cast<int>(State::VerifyConfig), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->result != FSM_State::Result::InWork;
+        },
+        this    
+    );
+
+    stateMachine_.AddTransition(static_cast<int>(State::RadioPairing), static_cast<int>(State::VerifyConfig), 
+        [](void *ctx){
+            return 
+                static_cast<Node*>(ctx)->stateMachine_.CurrentState()->result != FSM_State::Result::InWork;
         },
         this    
     );
@@ -179,23 +192,13 @@ void Node::init()
 {
     Log.verboseln(F("Node::init"));
 
-    radioConfig_.clear();
-    radioConfig_.save();
+    //uuidConfig_.clear();
+    //uuidConfig_.save();
 
-    uuidConfig_.clear();
-    uuidConfig_.save();
-
-
-    if(uuidConfig_.isEmpty())
-    {
+    //if(uuidConfig_.isEmpty())
+    //{
         // Build new UUID value and save it to EEPROM
-    }
-}
-
-void Node::stateBtnLoop()
-{
-    Appliance::stateBtnLoop();
-    stateBtnMode_ = checkStateBtn();
+    //}
 }
 
 /**
@@ -218,7 +221,6 @@ void Node::onVerifyConfig()
     }
 
     nextSleepTime_ = 0;
-    stateMachine_.CurrentState()->result = FSM_State::Result::Failed;
 }
 
 // RadioSend,
@@ -261,32 +263,59 @@ void Node::onLeaveActionHandler()
 }
 
 // RadioPairing,
+void Node::onEnterRadioPairing()
+{
+    onEnterActiveStateName();
+    radioSetup(2, radioConfigPairing_);
+}
+
 void Node::onRadioPairing()
 {
     auto currentState = stateMachine_.CurrentState();
-    auto success = true;
+    static auto success = false;
 
-    if(!currentState->timeout)
+    if(currentState->step == 1)
     {
-        if(currentState->step == 1)
-        {
-            stateLed_.blink(50, 250);
-            currentState->step++;
-        }
-
-        static uint32_t execTime = 0;
-        if(millis() - execTime > 1000L){
-            execTime = millis();
-            Log.verboseln(F("do some stuff..."));
-        }
+        stateLed_.blink(50, 250);
+        currentState->step++;   // Next step
+        success = false;
     }
     else if(currentState->step == 2)
-    {   
+    {
+        if(!currentState->timeout)
+        {
+            // Keep pairing
+            static uint32_t execTime = 0;
+            if(millis() - execTime > 1000L){
+                execTime = millis();
+                
+                // Prepare message
+                messageBuffer_.clear();
+                messageBuffer_.appendText("hello_123");
+
+                MessageBuffer *response = nullptr;
+                success = radioSend(radioConfigPairing_.gatewayId, &messageBuffer_, response);
+                if(success)
+                {
+                    // Parse message
+
+                    currentState->step++;   // Next step
+                }
+            }
+        }
+        else
+        {
+            // Timeout
+            currentState->step++;   // Next step
+        }
+    }
+    else if(currentState->step == 3)
+    {
         stateLed_.cancel();
         success ? stateLed_.blinkInPeriod(1000, 0, 3000) : stateLed_.blinkNumberOfTimes(500, 500, 5);
         currentState->step++;
     }
-    else if(currentState->step == 3)
+    else if(currentState->step == 4)
     {
         // Led finished work
         if(stateLed_.getState() == LED_IDLE)
@@ -294,6 +323,21 @@ void Node::onRadioPairing()
             Log.verboseln(F("Led finished work"));
             currentState->result = success ? FSM_State::Result::Success : FSM_State::Result::Failed;
         }
+    }
+}
+
+void Node::onLeaveRadioPairing()
+{
+    onLeaveActiveStateName();
+
+    // Sommit EEPROM if success
+    if(stateMachine_.CurrentState()->result == FSM_State::Result::Success)
+    {
+        Log.verboseln(F("pairing success!"));
+    }
+    else if(stateMachine_.CurrentState()->result == FSM_State::Result::Failed)
+    {
+        Log.warningln(F("pairing failed!"));
     }
 }
 
@@ -306,47 +350,8 @@ void Node::onRadioPairing()
 // RadioReset,
 void Node::onRadioReset()
 {
-    stateMachine_.CurrentState()->result = FSM_State::Result::Success;
-}
-
-Node::StateBtnMode Node::checkStateBtn()
-{
-    static constexpr uint16_t pairingPressTime = 3000;
-    static constexpr uint16_t radioResetPressTime = 10000;
-    static constexpr uint16_t factoryResetPressTime = 15000;
-
-    static unsigned long pressedTime = 0;
-    static unsigned long releasedTime = 0;
-
-    StateBtnMode mode = StateBtnMode::NoMode;
-
-    if(stateBtn_.isPressed()){
-        pressedTime = millis();
-        //Log.verboseln(F("pressed: %d"), pressedTime);
-    }
     
-    if(stateBtn_.isReleased()) {
-        releasedTime = millis();
-        //Log.verboseln(F("released: %d"), releasedTime);
-
-        long pressDuration = releasedTime - pressedTime;
-
-        if( pressDuration >= pairingPressTime ){
-            mode = StateBtnMode::Pairing;
-        }
-
-        if( (pressDuration >= radioResetPressTime) && (pressDuration < factoryResetPressTime) ){
-            mode = StateBtnMode::RadioReset;
-        }
-
-        if( pressDuration >= factoryResetPressTime ){
-            mode = StateBtnMode::FactoryReset;
-        }
-    }
-     //Log.verboseln(F("btnMode: %d, pressedTime: %d, releasedTime: %d"), 
-     //   static_cast<uint8_t>(mode), pressedTime, releasedTime);
-
-    return mode;
+    stateMachine_.CurrentState()->result = FSM_State::Result::Success;
 }
 
 #endif

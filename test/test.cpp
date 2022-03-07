@@ -3,10 +3,15 @@
 #include "test_UUIDConfig.hpp"
 #include "test_MessageBuffer.hpp"
 
+// Messages
+#include "test_radio_BaseMessage.hpp"
+#include "test_radio_BaseMessageEx.hpp"
+#include "test_radio_PairMessage.hpp"
+
 void setUp(void)
 {
 #ifndef ARDUINO
-    ArduinoFakeReset();
+    
 
     // Set EEPROM Mock allocation
     EEPROM.begin(512);
@@ -16,6 +21,9 @@ void setUp(void)
     {
         EEPROM.write(i, 0xff);
     }
+
+#else
+    //ArduinoFakeReset();
 #endif
 
 #ifdef ESP32
@@ -38,8 +46,13 @@ void process() {
     UNITY_BEGIN();
 
     run_tests_RadioConfig();
-    run_tests_UUIDConfig();
+    //run_tests_UUIDConfig();
     run_tests_MessageBuffer();
+
+    // Messages
+    run_tests_radio_BaseMessage();
+    run_tests_radio_BaseMessageEx();
+    run_tests_radio_PairMessage();
 
     UNITY_END();
 }

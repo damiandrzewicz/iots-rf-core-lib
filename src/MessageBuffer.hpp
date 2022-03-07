@@ -39,9 +39,19 @@ public:
         strcat(buffer_.data(), "|");
     }
 
+    const char *getDelimeter() const
+    {
+        return "|";
+    }
+
     void clear()
     {
         buffer_.fill('\0');
+    }
+
+    std::array<char, 100> *buffer()
+    {
+        return &buffer_;
     }
 
     const std::array<char, 100> *buffer() const

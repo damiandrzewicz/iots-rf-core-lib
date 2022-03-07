@@ -6,7 +6,6 @@
 #include "YA_FSM.h"
 #include <ezButton.h>
 #include <ezLED.h>
-//#include <arduino-timer.h>
 
 #include "RadioConfig.hpp"
 #include "MessageBuffer.hpp"
@@ -14,7 +13,16 @@
 class Appliance
 {
 public:
+    enum class StateBtnMode
+    {
+        NoMode,
+        Pairing,
+        RadioReset,
+        FactoryReset
+    };
+
     Appliance(uint8_t stateBtnPin, uint8_t stateLedPin, int8_t extInterruptPin = -1);
+    Appliance(uint8_t nssPin, uint8_t irqPin, uint8_t stateBtnPin, uint8_t stateLedPin, int8_t extInterruptPin = -1);
     ~Appliance() = default;
 
     virtual void setup();
@@ -41,11 +49,17 @@ protected:
     void onFactoryReset();
 
     // Radio operations
-    bool radioSetup(uint8_t nodeId, const RadioConfigData &data);
-    bool radioSend(const MessageBuffer *request, MessageBuffer *response, bool ack = true);
+    bool radioSetup(uint8_t nodeId, const RadioConfig &radioConfig);
+    bool radioSend(uint8_t gatewayId, const MessageBuffer *request, MessageBuffer *response, bool ack = true);
     bool radioPayloadToBuffer();
     void sendACKRepsonse(const MessageBuffer *request = nullptr);
-    RadioConfigData getRadioConfigForPairing();
+    RadioConfig getRadioConfigForPairing();
+
+    // Inputs
+    StateBtnMode checkStateBtn();
+
+private:
+    //void 
 
 protected:
     YA_FSM stateMachine_;
@@ -57,7 +71,9 @@ protected:
 
     RFM69_ATC radio_;
     RadioConfig radioConfig_;
+    RadioConfig radioConfigPairing_;
+    bool radioInitialized_ = false;
 
     MessageBuffer messageBuffer_;
-
+    StateBtnMode stateBtnMode_ = StateBtnMode::NoMode;
 };

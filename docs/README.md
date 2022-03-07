@@ -183,9 +183,43 @@ RadioReset --> join_action
 RadioPairing --> join_action
 join_action --> VerifyConfig : success/failed
 
-ActionHandler --> RadioSend : success &&\nno flag
+ActionHandler --> VerifyConfig : stateBtn == HIGH
 
 @enduml
 
+## Radio Message Exchange
 
-### Work Mode
+Messages:
+@startuml
+enum BaseRadioMessage
+{
+  Pair,
+  Register,
+  Alive,
+  State,
+  Command
+}
+@enduml
+
+Directions:
+@startuml
+enum MessageDirection
+{
+  Request,
+  Response
+}
+@enduml
+
+### Base Message
+
+`<type>|<direction>|<batteryPercent>`
+
+### Node-Gateway Pairing
+
+```
+test
+```
+
+@startuml
+
+@enduml
