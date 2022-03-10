@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <ArduinoLog.h>
 #include "Node.hpp"
+#include "utils/UuidGenerator.hpp"
 
 const char* const stateName[] PROGMEM = { 
     "VerifyConfig",
@@ -171,7 +172,7 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::RadioPairing), static_cast<int>(State::VerifyConfig), 
+    stateMachine_.AddTransition(static_cast<int>(State::RadioReset), static_cast<int>(State::VerifyConfig), 
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->result != FSM_State::Result::InWork;
@@ -179,7 +180,7 @@ void Node::setupStateMachine()
         this    
     );
 
-    stateMachine_.AddTransition(static_cast<int>(State::RadioPairing), static_cast<int>(State::VerifyConfig), 
+    stateMachine_.AddTransition(static_cast<int>(State::FactoryReset), static_cast<int>(State::VerifyConfig), 
         [](void *ctx){
             return 
                 static_cast<Node*>(ctx)->stateMachine_.CurrentState()->result != FSM_State::Result::InWork;
@@ -191,6 +192,15 @@ void Node::setupStateMachine()
 void Node::init()
 {
     Log.verboseln(F("Node::init"));
+
+    UuidGenerator uuidGenerator;
+
+    char uuid[50];
+    memset(uuid, '\0', sizeof(uuid));
+    uuidGenerator.generateUuid(uuid, sizeof(uuid));
+
+    Log.noticeln(F("uuid: %s"), uuid);
+
 
     //uuidConfig_.clear();
     //uuidConfig_.save();
