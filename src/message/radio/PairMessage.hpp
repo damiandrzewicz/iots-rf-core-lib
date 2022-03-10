@@ -11,7 +11,7 @@ namespace Message
         {
             uint8_t networkId;
             uint8_t gatewayId;
-            unsigned long customFrequency;
+            uint32_t customFrequency;
             const char *encryptKey;
             int8_t rssi;
         };
@@ -19,7 +19,7 @@ namespace Message
         class PairMessage final : public BaseMessageEx<PairMessageModel>
         {
         public:
-            bool parse(MessageBuffer &buffer, PairMessageModel &model)
+            bool parse(MessageBuffer &buffer, PairMessageModel &model) override
             {
                 if(!BaseMessageEx<PairMessageModel>::parse(buffer, model))
                 {
@@ -40,14 +40,14 @@ namespace Message
 
                 model.networkId = atoi(networkId);
                 model.gatewayId = atoi(gatewayId);
-                model.customFrequency = atoi(customFrequency);
+                model.customFrequency = atol(customFrequency);
                 model.encryptKey = encryptKey;
                 model.rssi = atoi(rssi);
 
                 return true;
             }
 
-            bool build(const PairMessageModel &model, MessageBuffer &buffer)
+            bool build(const PairMessageModel &model, MessageBuffer &buffer) override
             {
                 if(!BaseMessageEx<PairMessageModel>::build(model, buffer))
                 {
@@ -61,10 +61,9 @@ namespace Message
                 buffer.appendDelimeter();
                 buffer.appendInt(model.customFrequency);
                 buffer.appendDelimeter();
-                buffer.appendInt(model.rssi);
-                buffer.appendDelimeter();
                 buffer.appendText(model.encryptKey);
-
+                buffer.appendDelimeter();
+                buffer.appendInt(model.rssi);
 
                 return true;
             }

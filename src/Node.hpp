@@ -61,9 +61,8 @@ protected:
     // RadioReset,
     void onRadioReset();
 
-
-
     // Helpers
+    uint8_t getRandomNodeIdForRegister();
 
 protected:
     //UUIDConfig uuidConfig_;

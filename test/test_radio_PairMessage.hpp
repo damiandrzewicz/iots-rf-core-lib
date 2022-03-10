@@ -21,7 +21,7 @@ void test_PairMessage_build()
 
     PairMessage msg;
     TEST_ASSERT_TRUE(msg.build(model, buffer));
-    TEST_ASSERT_EQUAL_STRING("1|1|12|123|10|869000000|-55|testKey", buffer.buffer()->data());
+    TEST_ASSERT_EQUAL_STRING("1|1|12|123|10|869000000|testKey|-55", buffer.buffer()->data());
 }
 
 void test_PairMessage_parse_ok()
@@ -37,7 +37,7 @@ void test_PairMessage_parse_ok()
     buffer.appendDelimeter();
     buffer.appendInt(10);
     buffer.appendDelimeter();
-    buffer.appendInt(869000000);
+    buffer.appendInt(869000000U);
     buffer.appendDelimeter();
     buffer.appendText("testKey");
     buffer.appendDelimeter();

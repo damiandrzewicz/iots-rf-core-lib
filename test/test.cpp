@@ -7,6 +7,7 @@
 #include "test_radio_BaseMessage.hpp"
 #include "test_radio_BaseMessageEx.hpp"
 #include "test_radio_PairMessage.hpp"
+#include "test_radio_RegisterMessage.hpp"
 
 void setUp(void)
 {
@@ -53,6 +54,7 @@ void process() {
     run_tests_radio_BaseMessage();
     run_tests_radio_BaseMessageEx();
     run_tests_radio_PairMessage();
+    run_tests_radio_RegisterMessage();
 
     UNITY_END();
 }

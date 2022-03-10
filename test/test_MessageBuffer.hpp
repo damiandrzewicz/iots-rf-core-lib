@@ -25,8 +25,8 @@ void test_MessageBuffer_appendFloat()
 void test_MessageBuffer_appendFloat_prec1()
 {
     MessageBuffer mb;
-    mb.appendFloat(123456.1234, 2,2);
-    TEST_ASSERT_EQUAL_STRING("123456.12", mb.buffer()->data());
+    mb.appendFloat(12345.6, 2,2);
+    TEST_ASSERT_EQUAL_STRING("12345.60", mb.buffer()->data());
 }
 
 void test_MessageBuffer_appendFloat_prec2()

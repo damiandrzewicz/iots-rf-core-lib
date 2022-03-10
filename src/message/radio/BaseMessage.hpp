@@ -16,7 +16,7 @@ namespace Message
         class BaseMessage : public IMessage<T>
         {
         public:
-            bool parse(MessageBuffer &buffer, T &model)
+            bool parse(MessageBuffer &buffer, T &model) override
             {   
                 auto delim = buffer.getDelimeter();
                 auto type = strtok(buffer.buffer()->data(), delim);
@@ -33,7 +33,7 @@ namespace Message
                 return true;
             }
 
-            bool build(const T &model, MessageBuffer &buffer)
+            bool build(const T &model, MessageBuffer &buffer) override
             {
                 buffer.clear();
                 buffer.appendInt(static_cast<uint8_t>(model.type_));

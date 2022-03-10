@@ -27,6 +27,11 @@ public:
         snprintf(buffer_.data() + strlen(buffer_.data()), buffer_.size() - strlen(buffer_.data()), "%ld", value);
     }
 
+    void appendUint32(uint32_t value)
+    {
+        snprintf(buffer_.data() + strlen(buffer_.data()), buffer_.size() - strlen(buffer_.data()), "%ld", value);
+    }
+
     void appendFloat(double value, uint8_t size = 4, uint8_t prec = 2)
     {
         char temp[10];

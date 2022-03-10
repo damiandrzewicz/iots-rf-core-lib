@@ -16,7 +16,7 @@ namespace Message
         class BaseMessageEx : public BaseMessage<T>
         {
         public:
-            bool parse(MessageBuffer &buffer, T &model)
+            bool parse(MessageBuffer &buffer, T &model) override
             {   
                 if(!BaseMessage<T>::parse(buffer, model))
                 {
@@ -36,7 +36,7 @@ namespace Message
                 return true;
             }
 
-            bool build(const T &model, MessageBuffer &buffer)
+            bool build(const T &model, MessageBuffer &buffer) override
             {
                 if(!BaseMessage<T>::build(model, buffer))
                 {

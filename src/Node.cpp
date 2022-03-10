@@ -364,4 +364,10 @@ void Node::onRadioReset()
     stateMachine_.CurrentState()->result = FSM_State::Result::Success;
 }
 
+// Helpers
+uint8_t Node::getRandomNodeIdForRegister()
+{
+    return TrueRandom.random(15, 3);
+}
+
 #endif
