@@ -15,13 +15,13 @@ public:
     virtual bool parse() override
     {
         if(!RadioResponse::parse()){ return false; }
-        return !isErrorResult() ? this->parseModel() : true;
+        return !isError() ? this->parseModel() : true;
     }
 
     virtual bool build() override
     {
         if(!RadioResponse::build()){ return false; }
-        return !isErrorResult() ? this->buildModel() : true;
+        return !isError() ? this->buildModel() : true;
     }
 
 };

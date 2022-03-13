@@ -10,10 +10,11 @@ public:
     {
         Success,
         Error,
+        ParserError
     };
 
     RadioResponse(RadioMessageType type, MessageBuffer &buffer)
-        :   RadioMessage({ type, MessageDirection::Request }, buffer)
+        :   RadioMessage({ type, MessageDirection::Response }, buffer)
     {}
     virtual ~RadioResponse(){}
 
@@ -40,19 +41,19 @@ public:
         return true;
     }
 
-    bool isErrorResult()
+    bool isError()
     {
-        return result_ != Result::Success;
+        return static_cast<uint8_t>(result_) >= static_cast<uint8_t>(Result::Error);
     }
 
-    void setGenericErrorResult()
-    {
-        result_ = Result::Error;
-    }
-
-    void setDetailedErrorResult(Result result)
+    void setError(Result result = Result::Error)
     {
         result_ = result;
+    }
+
+    Result getResult()
+    {
+        return result_;
     }
 
 protected:

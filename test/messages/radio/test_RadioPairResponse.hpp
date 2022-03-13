@@ -4,12 +4,11 @@
 
 namespace Statics_RadioPairResponse
 {
-    static const uint8_t iType = static_cast<uint8_t>(RadioMessageType::Pair);
-    static const uint8_t iDirection = static_cast<uint8_t>(MessageDirection::Request);
     static const auto eType = RadioMessageType::Pair;
-    static const auto eDirection = MessageDirection::Request;
+    static const auto eDirection = MessageDirection::Response;
+    static const uint8_t iType = static_cast<uint8_t>(eType);
+    static const uint8_t iDirection = static_cast<uint8_t>(eDirection);
 };
-
 
 void test_RadioPairResponse_build_resultOk()
 {
@@ -45,7 +44,7 @@ void test_RadioPairResponse_build_resultError()
 {
     MessageBuffer buffer;
     RadioPairResponse msg(buffer);
-    msg.setGenericErrorResult();
+    msg.setError();
     
     TEST_ASSERT_TRUE(msg.build());
 

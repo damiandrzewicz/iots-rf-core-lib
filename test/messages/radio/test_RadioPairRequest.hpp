@@ -4,10 +4,10 @@
 
 namespace Statics_RadioPairRequest
 {
-    static const uint8_t iType = static_cast<uint8_t>(RadioMessageType::Pair);
-    static const uint8_t iDirection = static_cast<uint8_t>(MessageDirection::Request);
     static const auto eType = RadioMessageType::Pair;
     static const auto eDirection = MessageDirection::Request;
+    static const uint8_t iType = static_cast<uint8_t>(eType);
+    static const uint8_t iDirection = static_cast<uint8_t>(eDirection);
 };
 
 void test_RadioPairRequest_build()

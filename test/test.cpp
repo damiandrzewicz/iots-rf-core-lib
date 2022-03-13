@@ -4,6 +4,11 @@
 #include "test_MessageBuffer.hpp"
 
 // Messages
+#include "messages/radio/test_RadioMessage.hpp"
+#include "messages/radio/test_RadioRequest.hpp"
+#include "messages/radio/test_RadioResponse.hpp"
+#include "messages/radio/test_RadioModelRequest.hpp"
+#include "messages/radio/test_RadioModelResponse.hpp"
 #include "messages/radio/test_RadioPairRequest.hpp"
 #include "messages/radio/test_RadioPairResponse.hpp"
 
@@ -58,9 +63,13 @@ void process() {
     run_tests_MessageBuffer();
 
     // Messages
+    run_tests_RadioMessage();
+    run_tests_RadioRequest();
+    run_tests_RadioResponse();
+    run_tests_RadioModelRequest();
+    run_tests_RadioModelResponse();
     run_tests_RadioPairRequest();
     run_tests_RadioPairResponse();
-    //Test::Messages::Radio::run_tests_PairResponse();
 
     UNITY_END();
 }
