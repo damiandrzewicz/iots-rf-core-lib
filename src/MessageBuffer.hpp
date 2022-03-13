@@ -17,26 +17,24 @@ public:
         strncpy(buffer_.data(), str, buffer_.size());
     }
 
-    void appendText(const char *data)
+    void appendText(const char *data, bool last = false)
     {
         strcat(buffer_.data(), data);
+        if(!last) appendDelimeter();
     }
 
-    void appendInt(long value)
+    void appendInt(long value, bool last = false)
     {
         snprintf(buffer_.data() + strlen(buffer_.data()), buffer_.size() - strlen(buffer_.data()), "%ld", value);
+        if(!last) appendDelimeter();
     }
 
-    void appendUint32(uint32_t value)
-    {
-        snprintf(buffer_.data() + strlen(buffer_.data()), buffer_.size() - strlen(buffer_.data()), "%ld", value);
-    }
-
-    void appendFloat(double value, uint8_t size = 4, uint8_t prec = 2)
+    void appendFloat(double value, uint8_t size = 4, uint8_t prec = 2, bool last = false)
     {
         char temp[10];
         dtostrf(value, size, prec, temp);
         strcat(buffer_.data(), temp);
+        if(!last) appendDelimeter();
     }
 
     void appendDelimeter()

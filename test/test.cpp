@@ -4,10 +4,17 @@
 #include "test_MessageBuffer.hpp"
 
 // Messages
-#include "test_radio_BaseMessage.hpp"
-#include "test_radio_BaseMessageEx.hpp"
-#include "test_radio_PairMessage.hpp"
-#include "test_radio_RegisterMessage.hpp"
+#include "messages/radio/test_RadioPairRequest.hpp"
+#include "messages/radio/test_RadioPairResponse.hpp"
+
+//#include "test_radio_BaseMessage.hpp"
+
+//#include "test_radio_BatteryStateRequest.hpp"
+
+//#include "test_radio_PairResponse.hpp"
+//#include "test_radio_BaseMessageEx.hpp"
+//#include "test_radio_PairMessage.hpp"
+//#include "test_radio_RegisterMessage.hpp"
 
 void setUp(void)
 {
@@ -51,10 +58,9 @@ void process() {
     run_tests_MessageBuffer();
 
     // Messages
-    run_tests_radio_BaseMessage();
-    run_tests_radio_BaseMessageEx();
-    run_tests_radio_PairMessage();
-    run_tests_radio_RegisterMessage();
+    run_tests_RadioPairRequest();
+    run_tests_RadioPairResponse();
+    //Test::Messages::Radio::run_tests_PairResponse();
 
     UNITY_END();
 }
