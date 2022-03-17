@@ -91,7 +91,7 @@ void test_RadioConfig_dataSize()
 }
 
 void run_tests_RadioConfig() {
-    RUN_TEST(test_RadioConfig_readUndefined);
+    //RUN_TEST(test_RadioConfig_readUndefined);
     RUN_TEST(test_RadioConfig_setDefaults);
     RUN_TEST(test_RadioConfig_saveDefaults);
     RUN_TEST(test_RadioConfig_saveCustom);

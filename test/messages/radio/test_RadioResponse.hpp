@@ -1,6 +1,7 @@
 #pragma once
 #include "unity.h"
 #include "messages/radio/RadioResponse.hpp"
+#include "../../CommonBuffer.hpp"
 
 namespace Statics_RadioResponse
 {
@@ -12,7 +13,7 @@ namespace Statics_RadioResponse
 
 void test_RadioResponse_build_ok()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
 
     RadioResponse msg(Statics_RadioResponse::eType, buffer);
     TEST_ASSERT_TRUE(msg.build());
@@ -24,7 +25,7 @@ void test_RadioResponse_build_ok()
 
 void test_RadioResponse_build_error()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
 
     RadioResponse msg(Statics_RadioResponse::eType, buffer);
     msg.setError();
@@ -37,7 +38,7 @@ void test_RadioResponse_build_error()
 
 void test_RadioResponse_build_detailedError()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
 
     RadioResponse msg(Statics_RadioResponse::eType, buffer);
     msg.setError(RadioResponse::Result::ParserError);
@@ -50,7 +51,7 @@ void test_RadioResponse_build_detailedError()
 
 void test_RadioResponse_parse_ok()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioResponse::iType);
     buffer.appendInt(Statics_RadioResponse::iDirection);
     buffer.appendInt((int)RadioResponse::Result::Success);
@@ -64,7 +65,7 @@ void test_RadioResponse_parse_ok()
 
 void test_RadioResponse_parse_error()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioResponse::iType);
     buffer.appendInt(Statics_RadioResponse::iDirection);
     buffer.appendInt((int)RadioResponse::Result::Error);
@@ -78,7 +79,7 @@ void test_RadioResponse_parse_error()
 
 void test_RadioResponse_parse_detailedError()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioResponse::iType);
     buffer.appendInt(Statics_RadioResponse::iDirection);
     buffer.appendInt((int)RadioResponse::Result::ParserError);

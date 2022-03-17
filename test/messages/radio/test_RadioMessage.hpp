@@ -1,6 +1,7 @@
 #pragma once
 #include "unity.h"
 #include "messages/radio/RadioMessage.hpp"
+#include "../../CommonBuffer.hpp"
 
 namespace Statics_RadioMessage
 {
@@ -12,7 +13,7 @@ namespace Statics_RadioMessage
 
 void test_RadioMessage_build()
 {
-    MessageBuffer buffer;
+    //MessageBuffer buffer;
 
     RadioMessage msg({ Statics_RadioMessage::eType, Statics_RadioMessage::eDirection }, buffer);
     TEST_ASSERT_TRUE(msg.build());
@@ -24,7 +25,7 @@ void test_RadioMessage_build()
 
 void test_RadioMessage_parse_ok()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioMessage::iType);
     buffer.appendInt(Statics_RadioMessage::iDirection, true);
 
@@ -36,7 +37,7 @@ void test_RadioMessage_parse_ok()
 
 void test_RadioMessage_parse_error()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioMessage::iDirection, true);
 
     RadioMessage msg({ Statics_RadioMessage::eType, Statics_RadioMessage::eDirection }, buffer);

@@ -1,6 +1,7 @@
 #pragma once
 #include "unity.h"
 #include "messages/radio/RadioModelResponse.hpp"
+#include "../../CommonBuffer.hpp"
 
 namespace Statics_RadioModelResponse
 {
@@ -48,7 +49,7 @@ namespace Statics_RadioModelResponse
 
 void test_RadioModelResponse_build_resultOk()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
 
     Statics_RadioModelResponse::RadioModelResponseTest msg(Statics_RadioModelResponse::eType, buffer);
     msg.model().bool_value = true;
@@ -68,7 +69,7 @@ void test_RadioModelResponse_build_resultOk()
 
 void test_RadioModelResponse_build_resultError()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
 
     Statics_RadioModelResponse::RadioModelResponseTest msg(Statics_RadioModelResponse::eType, buffer);
     msg.setError();
@@ -85,7 +86,7 @@ void test_RadioModelResponse_build_resultError()
 
 void test_RadioModelResponse_parse_resultOk()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioModelResponse::iType);
     buffer.appendInt(Statics_RadioModelResponse::iDirection);
     buffer.appendInt(static_cast<uint8_t>(RadioResponse::Result::Success));

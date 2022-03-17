@@ -1,6 +1,7 @@
 #pragma once
 #include "unity.h"
 #include "messages/radio/concrete/RadioPairRequest.hpp"
+#include "../../CommonBuffer.hpp"
 
 namespace Statics_RadioPairRequest
 {
@@ -12,7 +13,7 @@ namespace Statics_RadioPairRequest
 
 void test_RadioPairRequest_build()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
 
     RadioPairRequest msg(buffer);
     TEST_ASSERT_TRUE(msg.build());
@@ -24,7 +25,7 @@ void test_RadioPairRequest_build()
 
 void test_RadioPairRequest_parse_ok()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioPairRequest::iType);
     buffer.appendInt(Statics_RadioPairRequest::iDirection, true);
 
@@ -36,7 +37,7 @@ void test_RadioPairRequest_parse_ok()
 
 void test_RadioPairRequest_parse_error()
 {
-    MessageBuffer buffer;
+    // MessageBuffer buffer;
     buffer.appendInt(Statics_RadioPairRequest::iDirection, true);
 
     RadioPairRequest msg(buffer);

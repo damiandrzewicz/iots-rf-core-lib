@@ -192,7 +192,7 @@ bool Appliance::radioSend(uint8_t gatewayId, const MessageBuffer *request, Messa
 
     if(ack)
     {
-        if(radio_.sendWithRetry(gatewayId, data, size))
+        if(radio_.sendWithRetry(gatewayId, data, size, 2, 100U))
         {
             Log.noticeln(F("send ok!"));
             if(radioPayloadToBuffer())
@@ -222,7 +222,7 @@ bool Appliance::radioSend(uint8_t gatewayId, const MessageBuffer *request, Messa
 
 bool Appliance::radioPayloadToBuffer()
 {
-    Log.verboseln(F("Appliance::radioPayloadToBuffer"));
+    //Log.verboseln(F("Appliance::radioPayloadToBuffer"));
 
     if (radio_.DATALEN) 
     {
@@ -232,7 +232,7 @@ bool Appliance::radioPayloadToBuffer()
         if(radio_.DATALEN == size)  // got a valid packet?
         {
             messageBuffer_ = data;  // copy message to the buffer
-            Log.noticeln(F("[RADIO IN>>>>]: data=%s, size=%d, senderId=%d, rssi=%d"), data, size, radio_.SENDERID, radio_.RSSI);
+            Log.noticeln(F("[RADIO IN>>>>]: data=%s, size=%d, senderId=%d, rssi=%d"), messageBuffer_.buffer()->data(), size, radio_.SENDERID, radio_.RSSI);
             return true;
         }
     }

@@ -2,8 +2,13 @@
 
 #include <Arduino.h>
 #include <ArduinoLog.h>
+#include <EEPROM.h>
 #include "Node.hpp"
-#include "utils/UuidGenerator.hpp"
+#include <TrueRandom.h>
+#include "utils/Convert.hpp"
+
+#include "messages/radio/concrete/RadioPairRequest.hpp"
+#include "messages/radio/concrete/RadioPairResponse.hpp"
 
 const char* const stateName[] PROGMEM = { 
     "VerifyConfig",
@@ -192,23 +197,23 @@ void Node::setupStateMachine()
 void Node::init()
 {
     Log.verboseln(F("Node::init"));
-
-    UuidGenerator uuidGenerator;
-
-    char uuid[50];
-    memset(uuid, '\0', sizeof(uuid));
-    uuidGenerator.generateUuid(uuid, sizeof(uuid));
-
-    Log.noticeln(F("uuid: %s"), uuid);
-
-
+    
     //uuidConfig_.clear();
-    //uuidConfig_.save();
+    EEPROM.get(100, uuidConfig_);
+    if(uuidConfig_.isEmpty())
+    {
+        Log.noticeln(F("creating new UUID"));
+        TrueRandom.uuid(uuidConfig_.uuidNumber);
+        EEPROM.put(100, uuidConfig_);
+    }
+    else
+    {
+        Log.noticeln(F("found EEPROM UUID"));
+    }
 
-    //if(uuidConfig_.isEmpty())
-    //{
-        // Build new UUID value and save it to EEPROM
-    //}
+    char uuidHex[40];
+    Convert::uuid_b2x(uuidConfig_.uuidNumber, uuidHex, sizeof(uuidHex));
+    Log.noticeln(F("uuid: %s"), uuidHex);
 }
 
 /**
@@ -299,17 +304,33 @@ void Node::onRadioPairing()
             if(millis() - execTime > 1000L){
                 execTime = millis();
                 
-                // Prepare message
-                messageBuffer_.clear();
-                messageBuffer_.appendText("hello_123");
+                // Keep trying until send ok
+                RadioPairRequest request(messageBuffer_);
+                request.build();
 
                 MessageBuffer *response = nullptr;
                 success = radioSend(radioConfigPairing_.gatewayId, &messageBuffer_, response);
+                
                 if(success)
                 {
                     // Parse message
-
-                    currentState->step++;   // Next step
+                    RadioPairResponse response(messageBuffer_);
+                    if(!response.parse())
+                    {
+                        Log.warningln(F("RadioPairResponse parse failed!"));
+                        success = false;    // Back to previous step
+                    }
+                    else
+                    {
+                        Log.noticeln(F("got radio config: %d, %d, %lu, %s, %d"),
+                            response.model().gatewayId,
+                            response.model().networkId,
+                            response.model().customFrequency,
+                            response.model().encryptKey,
+                            response.model().rssi
+                        );
+                        currentState->step++;   // Next step
+                    }
                 }
             }
         }

@@ -65,7 +65,7 @@ protected:
     uint8_t getRandomNodeIdForRegister();
 
 protected:
-    //UUIDConfig uuidConfig_;
+    UUIDConfig uuidConfig_;
     
 };
 

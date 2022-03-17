@@ -1,83 +1,82 @@
 #pragma once
 #include "unity.h"
 #include "UUIDConfig.hpp"
+#include <EEPROM.h>
 
-const int address = 100;
+void test_UUIDConfig_readUndefined()
+{
+    UUIDConfig rc;
+    EEPROM.get(100, rc);
+    TEST_ASSERT_TRUE(rc.isEmpty());
+}
 
-// void test_UUIDConfig_readUndefined()
-// {
-//     UUIDConfig rc(address);
-//     rc.read();
-//     TEST_ASSERT_TRUE(rc.isEmpty());
-// }
+void test_UUIDConfig_setDefaults()
+{
+    UUIDConfig rc;
+    rc.setDefaults();
+}
 
-// void test_UUIDConfig_setDefaults()
-// {
-//     UUIDConfig rc(address);
-//     rc.setDefaults();
-//     auto &data = rc.data();
+void test_UUIDConfig_saveDefaults()
+{
+    UUIDConfig rc;
+    EEPROM.get(100, rc);
+    rc.setDefaults();
 
-//     for(const auto &item : data.uuid)
-//     {
-//         TEST_ASSERT_EQUAL(0, item);
-//     }
-// }
+    EEPROM.put(100, rc);
 
-// void test_UUIDConfig_saveDefaults()
-// {
-//     UUIDConfig rc(address);
-//     rc.setDefaults();
-//     rc.save();
-//     rc.read();
+    UUIDConfig data;
+    EEPROM.get(100, data);
 
-//     TEST_ASSERT_FALSE(rc.isEmpty());
+    TEST_ASSERT_FALSE(rc.isEmpty());
+    TEST_ASSERT_EQUAL_INT8_ARRAY(rc.uuidNumber, data.uuidNumber, 16 );
+}
 
-//     auto &data = rc.data();
+void test_UUIDConfig_saveCustom()
+{
+    UUIDConfig rc;
 
-//     for(const auto &item : data.uuid)
-//     {
-//         TEST_ASSERT_EQUAL(0, item);
-//     }
-// }
+    for(uint8_t i = 0; i < sizeof rc.uuidNumber; ++i)
+    {
+        rc.uuidNumber[i] = i*2;
+    }
 
-// void test_UUIDConfig_saveCustom()
-// {
-//     UUIDConfig rc(address);
-//     auto &data = rc.data();
+    EEPROM.put(100, rc);
+    
+    UUIDConfig saved;
+    EEPROM.get(100, saved);
 
-//     const char *uuid = "A1B2C3D4E5F6AABB";
+    TEST_ASSERT_FALSE(rc.isEmpty());
+    TEST_ASSERT_EQUAL_INT8_ARRAY(rc.uuidNumber, saved.uuidNumber, 16 );
+}
 
-//     strcpy(reinterpret_cast<char*>(data.uuid), uuid);
+void test_UUIDConfig_clear()
+{
+    UUIDConfig rc;
+    EEPROM.get(100, rc);
+    rc.setDefaults();
+    EEPROM.put(100, rc);
 
-//     rc.save();
-//     rc.read();
+    EEPROM.get(100, rc);
 
-//     TEST_ASSERT_FALSE(rc.isEmpty());
+    TEST_ASSERT_FALSE(rc.isEmpty());
 
-//     auto &saved = rc.data();
+    rc.setEmpty();
+    EEPROM.put(100, rc);
 
-//     TEST_ASSERT_TRUE(!strcmp(uuid, reinterpret_cast<const char*>(saved.uuid)));
-// }
+    TEST_ASSERT_TRUE(rc.isEmpty());
+}
 
-// void test_UUIDConfig_clear()
-// {
-//     UUIDConfig rc(address);
-//     rc.setDefaults();
-//     rc.save();
-//     rc.read();
+void test_UUIDConfig_dataSize()
+{
+    UUIDConfig rc;
+    TEST_ASSERT_EQUAL(sizeof(UUIDConfig), rc.size());
+}
 
-//     TEST_ASSERT_FALSE(rc.isEmpty());
-
-//     rc.clear();
-//     rc.save();
-
-//     TEST_ASSERT_TRUE(rc.isEmpty());
-// }
-
-// void run_tests_UUIDConfig() {
-//     RUN_TEST(test_UUIDConfig_readUndefined);
-//     RUN_TEST(test_UUIDConfig_setDefaults);
-//     RUN_TEST(test_UUIDConfig_saveDefaults);
-//     RUN_TEST(test_UUIDConfig_saveCustom);
-//     RUN_TEST(test_UUIDConfig_clear);
-// }
+void run_tests_UUIDConfig() {
+    //RUN_TEST(test_UUIDConfig_readUndefined);
+    RUN_TEST(test_UUIDConfig_setDefaults);
+    RUN_TEST(test_UUIDConfig_saveDefaults);
+    RUN_TEST(test_UUIDConfig_saveCustom);
+    RUN_TEST(test_UUIDConfig_clear);
+    RUN_TEST(test_UUIDConfig_dataSize);
+}

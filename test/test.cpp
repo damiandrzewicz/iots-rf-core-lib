@@ -1,9 +1,11 @@
 #include "unity.h"
+
 #include "test_RadioConfig.hpp"
 #include "test_UUIDConfig.hpp"
 #include "test_MessageBuffer.hpp"
 
 // Messages
+#include "CommonBuffer.hpp"
 #include "messages/radio/test_RadioMessage.hpp"
 #include "messages/radio/test_RadioRequest.hpp"
 #include "messages/radio/test_RadioResponse.hpp"
@@ -11,18 +13,14 @@
 #include "messages/radio/test_RadioModelResponse.hpp"
 #include "messages/radio/test_RadioPairRequest.hpp"
 #include "messages/radio/test_RadioPairResponse.hpp"
-
-//#include "test_radio_BaseMessage.hpp"
-
-//#include "test_radio_BatteryStateRequest.hpp"
-
-//#include "test_radio_PairResponse.hpp"
-//#include "test_radio_BaseMessageEx.hpp"
-//#include "test_radio_PairMessage.hpp"
-//#include "test_radio_RegisterMessage.hpp"
+#include "messages/radio/test_RadioRegisterRequest.hpp"
+#include "messages/radio/test_RadioRegisterResponse.hpp"
+#include "messages/radio/test_RadioBatteryStateRequest.hpp"
+#include "messages/radio/test_RadioBatteryStateResponse.hpp"
 
 void setUp(void)
 {
+    buffer.clear();
 #ifndef ARDUINO
     
 
@@ -58,18 +56,22 @@ void tearDown(void) {
 void process() {
     UNITY_BEGIN();
 
-    run_tests_RadioConfig();
-    //run_tests_UUIDConfig();
-    run_tests_MessageBuffer();
+    // run_tests_RadioConfig();
+    // run_tests_UUIDConfig();
+    // run_tests_MessageBuffer();
 
     // Messages
-    run_tests_RadioMessage();
-    run_tests_RadioRequest();
-    run_tests_RadioResponse();
+    //run_tests_RadioMessage();
+    //run_tests_RadioRequest();
+    //run_tests_RadioResponse();
     run_tests_RadioModelRequest();
     run_tests_RadioModelResponse();
     run_tests_RadioPairRequest();
     run_tests_RadioPairResponse();
+    run_tests_RadioRegisterRequest();
+    run_tests_RadioRegisterResponse();
+    run_tests_RadioBatteryStateRequest();
+    run_tests_RadioBatteryStateResponse();
 
     UNITY_END();
 }

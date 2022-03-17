@@ -1,23 +1,25 @@
 #pragma once
 
-struct UUIDConfigData{
-    byte uuid[16];
+#include <Arduino.h>
+
+struct UUIDConfig{
+    byte uuidNumber[16];
+
+    bool isEmpty() { return uuidNumber[0] == 0xff; }
+
+    void setEmpty(){ uuidNumber[0] = 0xff; }
+
+    void setDefaults()
+    {
+        memset(uuidNumber, 0, sizeof(uuidNumber));
+    }
+
+    UUIDConfig getDefaults()
+    {
+        UUIDConfig data;
+        data.setDefaults();
+        return data;
+    }
+
+    size_t size(){ return sizeof(UUIDConfig); }
 };
-
-// class UUIDConfig : public EEPROMConfig<UUIDConfigData>
-// {
-// public:
-//     UUIDConfig(int address) : EEPROMConfig(address) {}
-
-//     virtual bool isEmpty() override{
-//         return data_.uuid[0] == emptyVal_;
-//     }
-
-//     virtual void setEmpty() override {
-//         data_.uuid[0] = emptyVal_;
-//     }
-
-//     virtual void setDefaults() override {
-//         memset(data_.uuid, 0, sizeof(data_.uuid));
-//     }
-// };

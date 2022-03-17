@@ -7,6 +7,9 @@
         "deque": "cpp",
         "sstream": "cpp",
         "valarray": "cpp",
-        "limits": "cpp"
+        "limits": "cpp",
+        "iterator": "cpp",
+        "type_traits": "cpp",
+        "ostream": "cpp"
     }
 }

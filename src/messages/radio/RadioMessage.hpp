@@ -14,7 +14,7 @@ struct RadioMessageModel
 class RadioMessage : public Message
 {
 public:
-    RadioMessage(RadioMessageModel radioMessageModel, MessageBuffer &buffer) : radioMessageModel_(radioMessageModel), buffer_(buffer)
+    RadioMessage(RadioMessageModel radioMessageModel, MessageBuffer &buffer) : buffer_(buffer), radioMessageModel_(radioMessageModel)
     {
         delimeter_ = buffer_.getDelimeter();
     }
